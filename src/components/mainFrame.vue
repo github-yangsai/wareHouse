@@ -20,48 +20,22 @@
             <Button type="default" ghost @click="cancelSave">取消</Button>
             <Button type="primary" @click="saveAllData" :disabled="notSave">保存</Button>
           </div>
-          <div class="setting_wrap" style="float:right;padding-right:20px;" v-if="showCameraFlag && this.cameraInfo.img_url && cameraInfo.img_url!='http://'">
+          <div
+            class="setting_wrap"
+            style="float:right;padding-right:20px;"
+            v-if="showCameraFlag && this.cameraInfo.img_url && cameraInfo.img_url!='http://'"
+          >
             <span class="field_name">描边：</span>
-            <Select v-model="line_width" size="small" style="width:76px;">
+            <Input v-model="strokeVal" type="number"></Input>
+            <!-- <Select v-model="line_width" size="small" style="width:76px;">
               <Option
                 v-for="item in strokeWidthList"
                 :value="item.line_width"
                 :key="item.line_width"
               >{{ item.label }}</Option>
-            </Select>
+            </Select> -->
           </div>
-          <!-- <div class="set_box clearfix" v-if="false">
-            <a href="javascript:void(0)" class="draw_btn">绘制区域</a>
-            <div class="setting_wrap">
-              <span class="field_name">颜色：</span>
-              <ColorPicker v-model="color" size="small" placement="bottom-start" alpha />
-            </div>
-            <div class="setting_wrap">
-              <span class="field_name">描边：</span>
-              <Select v-model="strokeVal" size="small" style="width:76px;">
-                <Option
-                  v-for="item in strokeWidthList"
-                  :value="item.value"
-                  :key="item.value"
-                >{{ item.label }}</Option>
-              </Select>
-            </div>
-            <div class="setting_wrap" style="padding-left:70px;">
-              <span class="field_name">透明度：</span>
-              <Select v-model="alphaVal" size="small" style="width:76px;">
-                <Option
-                  v-for="item in alphaList"
-                  :value="item.value"
-                  :key="item.value"
-                >{{ item.label }}</Option>
-              </Select>
-            </div>
-            <div class="clearfix fill_box">
-              <span class="field">区域名称：</span>
-              <i-input :value="cameraInfo.rtsp_url" placeholder="请输入区域名称"></i-input>
-            </div>
-            <a href="javascript:void(0)" class="del_btn">删除区域</a>
-          </div>-->
+         
 
           <div class="function_box" v-if="showCameraFlag" style="float:left;">
             <div class="clearfix">
@@ -138,14 +112,15 @@
                 <a href="javascript:void(0)" class="visible_btn">
                   <Icon type="md-eye" />
                 </a>
-                <!-- <div class="color_box">
+                <div class="color_box">
                   <ColorPicker
                     v-model="item.line_color"
+                    @on-active-change="updateColor(index)"
                     size="small"
                     placement="bottom-start"
                     alpha
                   />
-                </div>-->
+                </div>
                 <a href="javascript:void(0)" class="delarea_btn" @click="delArea(item,index)">
                   <Icon type="md-trash" />
                 </a>
@@ -202,9 +177,14 @@ export default {
   watch: {
     cameraInfo: {
       handler(newVal, oldVal) {
-        if (newVal.zones && newVal.zones.length && newVal.img_url && newVal.img_url != "http://") {
+        if (
+          newVal.zones &&
+          newVal.zones.length &&
+          newVal.img_url &&
+          newVal.img_url != "http://"
+        ) {
           this.notSave = false;
-        }else{
+        } else {
           this.notSave = true;
         }
         // if (newVal.id != oldVal.id) {
@@ -226,6 +206,9 @@ export default {
     this.queryAllData();
   },
   methods: {
+    updateColor(index){
+      this.$set(this.areaList[index],"line_color",this.areaList[index].line_color);
+    },
     updateCameraInfo(obj) {
       //区域信息更新到摄像头信息
       if (obj) {
@@ -1218,7 +1201,8 @@ export default {
       let num = this.num;
       let areaItem = {
         name: "仓库A" + num + "区域",
-        points: []
+        points: [],
+        line_color:"rgba(255,0,0,1)"
       };
       this.cameraInfo.zones.push(areaItem);
       this.num++;
@@ -1404,6 +1388,9 @@ export default {
 }
 
 /*填写摄像头信息*/
+.setting_wrap .ivu-input{
+  width:60px;
+}
 .fill_box {
   float: left;
   margin-right: 10px;
@@ -1421,7 +1408,7 @@ export default {
   width: 140px;
   line-height: 50px;
 }
-.fill_box .ivu-input {
+.fill_box .ivu-input,.setting_wrap .ivu-input {
   background: #071826;
   border: 1px #5d7388 solid;
   color: #fff;
