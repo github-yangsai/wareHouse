@@ -1,0 +1,8 @@
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-size:16px;}
+ul,li{list-style: none;}
+.clearfix::after{display:block;clear: both;content:"";overflow: hidden;font-size:0;}
+/* .ivu-form .ivu-form-item-label{
+    font-size:18px;
+    float:none;
+  } */
