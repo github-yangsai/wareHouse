@@ -9,6 +9,7 @@
               :class="{'current': selectedNvr === index}"
               v-for="(item,index) in nvrList"
               @click="tabNvr($event,index)"
+              :key="item.id"
             >
               <span>
                 {{ item.name }}
@@ -33,6 +34,7 @@
               v-for="(item,i) in cameraList"
               @click="editCamera($event,i)"
               :class="{'current':selectedCamera === i}"
+              :key="item.id"
             >{{item.name}}</li>
           </ul>
         </div>
@@ -92,6 +94,13 @@ export default {
     }
   },
   methods: {
+    cancelAddCamera(){
+      //取消新增摄像头
+      this.cameraList.splice(this.selectedCamera,1);
+      // if( this.cameraList.length){
+      //   this.selectedCamera
+      // }
+    },
     queryAllData(){
       this.$emit("queryAllData");
     },
@@ -148,9 +157,12 @@ export default {
     tabNvr(event, i) {
       //NVR tab切换
       event.preventDefault();
+      this.$store.commit("changeAreaFlag", false);
       this.selectedCamera = "";
       this.selectedNvr = i;
       this.cameraList = JSON.parse(JSON.stringify(this.nvrList[i].cameras));
+      this.$emit("updateCameraInfo");
+      
     }
   }
 };

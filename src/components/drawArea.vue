@@ -4,7 +4,7 @@
       <!-- <input type="button" value="新增区域" @click="add" />
       <input type="button" value="清除" @click="clearAll" />
       <input type="button" value="删除指定区域" @click="removePolygon(activePoint)" />
-      <input type="button" value="撤销上一步" @click="undo" /> -->
+      <input type="button" value="撤销上一步" @click="undo" />-->
       <div class="capture_box">
         <!-- {{points}} -->
         <div class="img_box">
@@ -30,7 +30,7 @@
 export default {
   name: "drawArea",
   components: {},
-  props: ["data", "notSave", "areaFlag"],
+  props: ["data", "notSave"],
   data() {
     return {
       points: [
@@ -74,16 +74,38 @@ export default {
     };
   },
   mounted() {
-    this.$canvas = document.getElementById("canvas");
-    this.ctx = document.getElementById("canvas").getContext("2d");
-    this.image = new Image();
-    this.image.src = "../../static/images/background.jpg";
-    this.image.onload = this.resize;
-    this.$canvas.style.background = "url(" + this.image.src + ")";
+    this.init();
   },
-  computed: {},
+  computed: {
+    areaFlag() {
+      return this.$store.state.areaFlag;
+    }
+  },
   methods: {
-    changeActive(index){
+    init() {
+      this.$canvas = document.getElementById("canvas");
+      this.ctx = document.getElementById("canvas").getContext("2d");
+      this.image = new Image();
+      this.image.src = "http://192.168.16.228:8888/" + this.data.img_url;
+      this.image.onload = this.resize;
+      this.$canvas.style.background = "url(" + this.image.src + ")";
+      if (this.areaFlag) {
+        this.$canvas = document.getElementById("canvas");
+        this.ctx = document.getElementById("canvas").getContext("2d");
+        this.image = new Image();
+        this.image.src = "http://192.168.16.228:8888/" + this.data.img_url;
+        this.image.onload = this.resize;
+        this.$canvas.style.background = "url(" + this.image.src + ")";
+
+        //新增与编辑区域
+        let zones = this.data.zones;
+        this.points = [];
+        for (let i = 0; i < zones.length; i++) {
+          this.points.push(zones[i].points);
+        }
+      }
+    },
+    changeActive(index) {
       this.active = index;
     },
     clearAll() {
@@ -101,17 +123,15 @@ export default {
     },
     removePolygon(index) {
       //删除指定区域（根据区域先后顺序索引）
-      debugger
       this.points.splice(index, 1);
       if (index <= this.activePoint) {
         --this.activePoint;
       }
       if (this.points.length == 0) {
         this.enabled = false;
-      }else{
-         this.active = 0;
+      } else {
+        this.active = 0;
       }
-     
     },
     reset() {
       this.points = [];
@@ -201,9 +221,7 @@ export default {
           minDisIndex = i;
         }
       }
-      debugger
       if (minDis < 6 && minDisIndex >= 0) {
-        debugger
         this.activePoint = minDisIndex;
         this.$canvas.addEventListener("mousemove", this.move);
         return false;
@@ -349,26 +367,8 @@ export default {
     }
   },
   watch: {
-    areaFlag(val) {
-      if (val) {
-        this.$canvas = document.getElementById("canvas");
-        this.ctx = document.getElementById("canvas").getContext("2d");
-        this.image = new Image();
-        this.image.src = "../../static/images/background.jpg";
-        this.image.onload = this.resize;
-        this.$canvas.style.background = "url(" + this.image.src + ")";
-
-        //新增与编辑区域
-        let zones = this.data.zones;
-        this.points = [];
-        for (let i = 0; i < zones.length; i++) {
-          this.points.push(zones[i].points);
-        }
-      }
-    },
     active(newVal, oldVal) {
       if (newVal != oldVal) this.draw();
-      console.log(this.activePoint)
     },
     points: {
       handler(val) {

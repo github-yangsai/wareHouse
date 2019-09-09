@@ -17,7 +17,7 @@
 
         <div class="toolbar clearfix">
           <div class="r_btnbox" v-if="showCameraFlag">
-            <i-button type="ghost">取消</i-button>
+            <Button type="default" ghost @click="cancelSave">取消</Button>
             <Button type="primary" @click="saveAllData" :disabled="notSave">保存</Button>
           </div>
           <div class="setting_wrap" v-if="showCameraFlag" style="float:right;padding-right:20px;">
@@ -67,19 +67,24 @@
             <div class="clearfix">
               <div class="clearfix fill_box">
                 <span class="field">摄像头名称：</span>
-                <i-input :value="cameraInfo.name" placeholder="请输入摄像头名称"></i-input>
+                <Input v-model="cameraInfo.name" placeholder="请输入摄像头名称" />
               </div>
               <div class="clearfix fill_box">
                 <span class="field">rtsp地址：</span>
-                <i-input :value="cameraInfo.rtsp_url" placeholder="请输入rtsp地址"></i-input>
+                <Input v-model="cameraInfo.rtsp_url" placeholder="请输入rtsp地址" />
               </div>
               <div class="clearfix fill_box">
                 <span class="field">通道数：</span>
-                <i-input :value="cameraInfo.count" placeholder="请输入通道数"></i-input>
+                <Input v-model="cameraInfo.count" placeholder="请输入通道数" />
               </div>
               <div class="fill_box">
-                <a href="javascript:void(0)" class="capture_btn">点击截屏</a>
-                <a href="javascript:void(0)" class="del_btn" @click="confirmDelcamera()" v-if="cameraInfo.id">删除摄像头</a>
+                <a href="javascript:void(0)" class="capture_btn" @click="clickCapture">点击截屏</a>
+                <a
+                  href="javascript:void(0)"
+                  class="del_btn"
+                  @click="confirmDelcamera()"
+                  v-if="cameraInfo.id"
+                >删除摄像头</a>
               </div>
             </div>
           </div>
@@ -88,16 +93,23 @@
       </Header>
       <Layout>
         <Sider hide-trigger width="220">
-          <side-menu :nvrList="nvrList" @clickedCamera="clickedCamera" @queryAllData="queryAllData"></side-menu>
+          <side-menu
+            :nvrList="nvrList"
+            @updateCameraInfo="updateCameraInfo"
+            @clickedCamera="clickedCamera"
+            @queryAllData="queryAllData"
+            ref="sideMenu"
+          ></side-menu>
         </Sider>
         <Content>
           <draw-area
             :data="cameraInfo"
+            @updateCameraInfo="updateCameraInfo"
             :notSave="notSave"
-            @toggleLine="toggleLine"
             ref="drawAreaBox"
-            :areaFlag="areaFlag"
+            v-if="showCameraFlag"
           ></draw-area>
+          <!-- v-if="cameraInfo.zones && cameraInfo.img_url && cameraInfo.img_url!='http://'" -->
         </Content>
         <div class="right_bar" v-if="showCameraFlag">
           <div class="area_container">
@@ -106,6 +118,7 @@
                 v-for="(item,index) in areaList"
                 :class="{'current': selectedArea == index}"
                 @click="editArea(index)"
+                :key="index"
               >
                 <div class="areaname_box edit" v-if="item.showAreaInput">
                   <Input
@@ -176,19 +189,21 @@ export default {
       showCameraFlag: false,
       cameraInfo: {},
       num: 1,
-      selectedArea: null,
+      selectedArea: 0,
       loading: false,
       areaData: {},
-      showLineFlag: false,
-      areaFlag: false
+      showLineFlag: false
     };
   },
   watch: {
     cameraInfo: {
-      handler(newVal) {
-        if (newVal.zones.length) {
+      handler(newVal, oldVal) {
+        if (newVal.zones && newVal.zones.length) {
           this.notSave = false;
         }
+        // if (newVal.id != oldVal.id) {
+        //   this.$store.commit("changeAreaFlag", false);
+        // }
       },
       deep: true
     }
@@ -196,14 +211,55 @@ export default {
   computed: {
     areaList() {
       return this.cameraInfo.zones ? this.cameraInfo.zones : [];
+    },
+    areaFlag() {
+      return this.$store.state.areaFlag;
     }
   },
   mounted() {
     this.queryAllData();
   },
   methods: {
-    toggleLine(val) {
-      this.showLineFlag = val;
+    updateCameraInfo(obj) {
+      //区域信息更新到摄像头信息
+      if (obj) {
+        for (let key in obj) {
+          this.cameraInfo[key] = obj[key];
+        }
+      } else {
+        this.cameraInfo = {};
+      }
+    },
+    clickCapture() {
+      //点击截屏
+      if (!this.cameraInfo.rtsp_url) {
+        this.$Message.warning("请先输入rtsp地址才能截屏", 5);
+        return false;
+      }
+      this.loading = true;
+      let _this = this;
+      let rtsp_url = this.cameraInfo.rtsp_url; //输入视频地址后才能截屏
+      let data = new FormData();
+      data.append("rtsp_url", rtsp_url);
+      this.$api.wareHouse
+        .capture(data)
+        .then(res => {
+          if (res.data) {
+            let img_url = res.data.img_data_url;
+            _this.cameraInfo.img_url = img_url;
+            this.loading = false;
+            let _image = new Image();
+            _image.src = "http://192.168.16.228:8888/" + img_url;
+            _image.onload = function() {
+              _this.cameraInfo.width = _image.width;
+              _this.cameraInfo.height = _image.height;
+            };
+          }
+        })
+        .catch(function(error) {
+          this.$Message.error(error);
+          this.loading = false;
+        });
     },
     queryAllData() {
       //查询所有NVR数据
@@ -989,20 +1045,41 @@ export default {
           this.areaList[i].showAreaInput = false;
           this.areaList[i].line_color = "rgba(255,0,0,1)";
         }
-        //区域点信息
-        this.areaFlag = true;
+        this.$store.commit("changeAreaFlag", true);
       }
+    },
+    cancelSave(){
+      this.$Modal.confirm({
+        title: "提示",
+        content:
+          "确认取消保存？",
+        onOk: () => {
+          if(this.cameraInfo.id){
+            //取消修改
+          }else{
+            //取消新增
+            this.showCameraFlag = false;
+            this.$refs.sideMenu.cancelAddCamera();
+            
+          }
+          //  this.$Message.success("已取消");
+        },
+        onCancel: () => {}
+      });
     },
     saveAllData() {
       //新增或修改摄像头信息和区域
-       let data = this.cameraInfo;
+      let data = this.cameraInfo;
+      this.loading = true;
       if (this.cameraInfo.id) {
-        this.$api.wareHouse.reviewCamera(data.id, data).then(res => {
+        this.$api.wareHouse.reviewCamera(this.cameraInfo.id, data).then(res => {
+          this.loading = false;
           this.$Message.success("保存成功");
           this.queryAllData();
         });
-      }else{
+      } else {
         this.$api.wareHouse.addCamera(data).then(res => {
+          this.loading = false;
           this.$Message.success("新增成功");
           this.queryAllData();
         });
@@ -1125,8 +1202,6 @@ export default {
   left: 0;
   top: 7px;
 }
-.tab_title {
-}
 .tab_title li {
   float: left;
   width: 50%;
@@ -1153,8 +1228,6 @@ export default {
   background: #283847;
   height: 50px;
   line-height: 50px;
-}
-.set_box {
 }
 .setting_wrap {
   position: relative;

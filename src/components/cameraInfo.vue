@@ -10,7 +10,8 @@
       :closable="false"
     >
       <div class="form_box">
-        <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="100">
+        <Form ref="formValidate" :label-width="100">
+           <!-- :model="formValidate" :rules="ruleValidate" -->
               <FormItem label="摄像头名称" prop="name">
                 <Input v-model="formValidate.name" placeholder="请输入摄像头名称"></Input>
               </FormItem>

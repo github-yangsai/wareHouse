@@ -5,7 +5,9 @@
  const base = {
     nvrs: `${domain}/warehouse/nvrs`,
     nvr: `${domain}/warehouse/nvr`,
-    camera:`${domain}/warehouse/camera`
+    cameras:`${domain}/warehouse/cameras`,
+    camera:`${domain}/warehouse/camera`,
+    capture:`${domain}/warehouse/capture`
 }
 
 export default base;

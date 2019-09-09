@@ -33,7 +33,11 @@
     },
     //新增摄像头
     addCamera (params) {
-        return axios.post(`${base.camera}`,params);
+        return axios.post(`${base.cameras}/`,params);
+    },
+    //截屏
+    capture (params) {
+        return axios.post(`${base.capture}/`,params);
     }
 
 
