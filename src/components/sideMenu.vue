@@ -77,11 +77,9 @@ export default {
     // 监听是否有选择摄像头
     selectedCamera(val) {
       let itemData = {};
-      let flag = val;
+      let flag;
       if (val === 0 || val) {
-        if (val === 0) {
-          flag = true;
-        }
+        flag = true;
         if (!this.cameraList[val].id) {
           //新增
           itemData = this.defaultCamera;
@@ -90,7 +88,7 @@ export default {
           itemData = this.cameraList[val];
         }
       }
-      this.$emit("clickedCamera", flag, itemData);
+      // this.$emit("clickedCamera", flag, itemData);
     }
   },
   methods: {
@@ -114,6 +112,7 @@ export default {
         onOk: () => {
           this.$api.wareHouse.delNvr(item.id).then(res => {
             this.$Message.success("删除成功");
+            this.queryAllData();
           });
         },
         onCancel: () => {}
@@ -138,13 +137,14 @@ export default {
         nvr: {
           id: this.nvrList[this.selectedNvr].id
         },
-        zones:[{points:[]}]
+        zones:[]
       };
       this.cameraList.push(defaultCamera);
       this.defaultCamera = defaultCamera;
       this.selectedCamera = this.cameraList.length
         ? this.cameraList.length - 1
         : 0;
+      this.$emit("clickedCamera", true, defaultCamera);
     },
     editCamera(event, i) {
       this.selectedCameraIdx = i;

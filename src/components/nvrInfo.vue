@@ -1,5 +1,6 @@
 <template>
   <div>
+    <Spin size="large" fix v-if="loading"></Spin>
     <Modal
       v-model="openFlag"
       title="NVR信息"
@@ -10,7 +11,7 @@
       :closable="false"
     >
       <div class="form_box">
-        <Form ref="formValidate" :model="data" :label-width="120">
+        <Form ref="formValidate" :model="data" :rules="ruleValidate" :label-width="120">
           <Row>
             <Col span="12">
               <FormItem label="NVR名称" prop="name">
@@ -44,7 +45,7 @@
         <!-- <a href="javascript:void(0)" @click="delData">删除NVR</a> -->
         <div class="btn_box">
           <input type="button" value="取消" class="solid_btn" @click="closeDialog" />
-          <input type="button" value="确定" class="full_btn" @click="saveData" />
+          <input type="button" value="确定" class="full_btn" @click="saveData('formValidate')" />
         </div>
       </div>
     </Modal>
@@ -56,6 +57,7 @@ export default {
   name: "cameraInfo",
   data() {
     return {
+      loading:false,
       ruleValidate: {
         name: [
           {
@@ -64,67 +66,23 @@ export default {
             trigger: "blur"
           }
         ],
-        mail: [
+        ip: [
           {
             required: true,
-            message: "Mailbox cannot be empty",
-            trigger: "blur"
-          },
-          { type: "email", message: "Incorrect email format", trigger: "blur" }
-        ],
-        city: [
-          {
-            required: true,
-            message: "Please select the city",
-            trigger: "change"
-          }
-        ],
-        gender: [
-          { required: true, message: "Please select gender", trigger: "change" }
-        ],
-        interest: [
-          {
-            required: true,
-            type: "array",
-            min: 1,
-            message: "Choose at least one hobby",
-            trigger: "change"
-          },
-          {
-            type: "array",
-            max: 2,
-            message: "Choose two hobbies at best",
-            trigger: "change"
-          }
-        ],
-        date: [
-          {
-            required: true,
-            type: "date",
-            message: "Please select the date",
-            trigger: "change"
-          }
-        ],
-        time: [
-          {
-            required: true,
-            type: "string",
-            message: "Please select time",
-            trigger: "change"
-          }
-        ],
-        desc: [
-          {
-            required: true,
-            message: "Please enter a personal introduction",
-            trigger: "blur"
-          },
-          {
-            type: "string",
-            min: 20,
-            message: "Introduce no less than 20 words",
+            message: "ip地址不能为空",
             trigger: "blur"
           }
+          // { type: "email", message: "Incorrect email format", trigger: "blur" }
+        ],
+        username: [
+          {
+            required: true,
+            message: "用户名不能为空",
+            trigger: "blur"
+          }
+        ],
+        password: [
+          { required: true, message: "密码不能为空", trigger: "change" }
         ]
       }
     };
@@ -142,36 +100,36 @@ export default {
     closeDialog() {
       this.$emit("closePopup");
     },
-    handleSubmit(name) {
-      // this.$refs[name].validate(valid => {
-      //   if (valid) {
-      //     this.$Message.success("Success!");
-      //   } else {
-      //     this.$Message.error("Fail!");
-      //   }
-      // });
-    },
     handleReset(name) {
       this.$refs[name].resetFields();
     },
-    saveData() {
+    saveData(name) {
       //修改数据
-      if (this.data.id) {
-        this.$api.wareHouse.reviewNvr(this.data.id, this.data).then(res => {
-          console.log(res);
-          this.$Message.success("修改成功");
-          this.$emit("queryAllData");
-          this.closeDialog();
-        });
-      } else {
-         this.$api.wareHouse.addNvr(this.data).then(res => {
-          console.log(res);
-          this.$Message.success("新增成功");
-          this.$emit("queryAllData");
-          this.closeDialog();
-        });
-      }
-    },
+      this.$refs[name].validate(valid => {
+        if (valid) {
+          //验证通过
+          this.loading = true;
+          if (this.data.id) {
+            this.$api.wareHouse.reviewNvr(this.data.id, this.data).then(res => {
+              this.loading = false;
+              this.$Message.success("修改成功");
+              this.$emit("queryAllData");
+              this.closeDialog();
+            });
+          } else {
+            this.$api.wareHouse.addNvr(this.data).then(res => {
+              this.loading = false;
+              this.$emit("queryAllData");
+              this.$Message.success("新增成功");
+              this.closeDialog();
+            });
+          }
+        } else {
+          //验证不通过
+           this.$Message.error('请完善信息');
+        }
+      });
+    }
   }
 };
 </script>

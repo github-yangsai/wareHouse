@@ -20,7 +20,7 @@
             <Button type="default" ghost @click="cancelSave">取消</Button>
             <Button type="primary" @click="saveAllData" :disabled="notSave">保存</Button>
           </div>
-          <div class="setting_wrap" v-if="showCameraFlag" style="float:right;padding-right:20px;">
+          <div class="setting_wrap" style="float:right;padding-right:20px;" v-if="showCameraFlag && this.cameraInfo.img_url && cameraInfo.img_url!='http://'">
             <span class="field_name">描边：</span>
             <Select v-model="line_width" size="small" style="width:76px;">
               <Option
@@ -107,11 +107,14 @@
             @updateCameraInfo="updateCameraInfo"
             :notSave="notSave"
             ref="drawAreaBox"
-            v-if="showCameraFlag"
+            v-if="showCameraFlag && cameraInfo.img_url"
           ></draw-area>
           <!-- v-if="cameraInfo.zones && cameraInfo.img_url && cameraInfo.img_url!='http://'" -->
         </Content>
-        <div class="right_bar" v-if="showCameraFlag">
+        <div
+          class="right_bar"
+          v-if="showCameraFlag && this.cameraInfo.img_url && cameraInfo.img_url!='http://'"
+        >
           <div class="area_container">
             <ul>
               <li
@@ -192,14 +195,17 @@ export default {
       selectedArea: 0,
       loading: false,
       areaData: {},
-      showLineFlag: false
+      showLineFlag: false,
+      resultData: {}
     };
   },
   watch: {
     cameraInfo: {
       handler(newVal, oldVal) {
-        if (newVal.zones && newVal.zones.length) {
+        if (newVal.zones && newVal.zones.length && newVal.img_url && newVal.img_url != "http://") {
           this.notSave = false;
+        }else{
+          this.notSave = true;
         }
         // if (newVal.id != oldVal.id) {
         //   this.$store.commit("changeAreaFlag", false);
@@ -257,8 +263,8 @@ export default {
           }
         })
         .catch(function(error) {
-          this.$Message.error(error);
-          this.loading = false;
+          _this.$Message.error(error);
+          _this.loading = false;
         });
     },
     queryAllData() {
@@ -1038,29 +1044,151 @@ export default {
     },
     clickedCamera(isClicked, data) {
       this.showCameraFlag = isClicked;
+      this.cameraInfo = {};
+      this.resultData = JSON.parse(JSON.stringify(data));
       if (isClicked) {
-        this.cameraInfo = data;
-        // this.areaList = data.zones ? data.zones : [];
+        this.cameraInfo = JSON.parse(JSON.stringify(data));
         for (let i = 0; i < this.areaList.length; i++) {
           this.areaList[i].showAreaInput = false;
           this.areaList[i].line_color = "rgba(255,0,0,1)";
         }
         this.$store.commit("changeAreaFlag", true);
+        // console.log("是否相等" + this.deepCompare(this.resultData,this.cameraInfo));
+        if (data.id) {
+          this.$nextTick(() => {
+            this.$refs.drawAreaBox.init();
+          });
+        }
       }
     },
-    cancelSave(){
+    deepCompare(x, y) {
+      var i, l, leftChain, rightChain;
+
+      function compare2Objects(x, y) {
+        var p;
+
+        // remember that NaN === NaN returns false
+        // and isNaN(undefined) returns true
+        if (
+          isNaN(x) &&
+          isNaN(y) &&
+          typeof x === "number" &&
+          typeof y === "number"
+        ) {
+          return true;
+        }
+
+        // Compare primitives and functions.
+        // Check if both arguments link to the same object.
+        // Especially useful on the step where we compare prototypes
+        if (x === y) {
+          return true;
+        }
+
+        // Works in case when functions are created in constructor.
+        // Comparing dates is a common scenario. Another built-ins?
+        // We can even handle functions passed across iframes
+        if (
+          (typeof x === "function" && typeof y === "function") ||
+          (x instanceof Date && y instanceof Date) ||
+          (x instanceof RegExp && y instanceof RegExp) ||
+          (x instanceof String && y instanceof String) ||
+          (x instanceof Number && y instanceof Number)
+        ) {
+          return x.toString() === y.toString();
+        }
+
+        // At last checking prototypes as good as we can
+        if (!(x instanceof Object && y instanceof Object)) {
+          return false;
+        }
+
+        if (x.isPrototypeOf(y) || y.isPrototypeOf(x)) {
+          return false;
+        }
+
+        if (x.constructor !== y.constructor) {
+          return false;
+        }
+
+        if (x.prototype !== y.prototype) {
+          return false;
+        }
+
+        // Check for infinitive linking loops
+        if (leftChain.indexOf(x) > -1 || rightChain.indexOf(y) > -1) {
+          return false;
+        }
+
+        // Quick checking of one object being a subset of another.
+        // todo: cache the structure of arguments[0] for performance
+        for (p in y) {
+          if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
+            return false;
+          } else if (typeof y[p] !== typeof x[p]) {
+            return false;
+          }
+        }
+
+        for (p in x) {
+          if (y.hasOwnProperty(p) !== x.hasOwnProperty(p)) {
+            return false;
+          } else if (typeof y[p] !== typeof x[p]) {
+            return false;
+          }
+
+          switch (typeof x[p]) {
+            case "object":
+            case "function":
+              leftChain.push(x);
+              rightChain.push(y);
+
+              if (!compare2Objects(x[p], y[p])) {
+                return false;
+              }
+
+              leftChain.pop();
+              rightChain.pop();
+              break;
+
+            default:
+              if (x[p] !== y[p]) {
+                return false;
+              }
+              break;
+          }
+        }
+
+        return true;
+      }
+
+      if (arguments.length < 1) {
+        return true; //Die silently? Don't know how to handle such case, please help...
+        // throw "Need two or more arguments to compare";
+      }
+
+      for (i = 1, l = arguments.length; i < l; i++) {
+        leftChain = []; //Todo: this can be cached
+        rightChain = [];
+
+        if (!compare2Objects(arguments[0], arguments[i])) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+    cancelSave() {
       this.$Modal.confirm({
         title: "提示",
-        content:
-          "确认取消保存？",
+        content: "确认取消保存？",
         onOk: () => {
-          if(this.cameraInfo.id){
+          if (this.cameraInfo.id) {
             //取消修改
-          }else{
+          } else {
             //取消新增
             this.showCameraFlag = false;
             this.$refs.sideMenu.cancelAddCamera();
-            
           }
           //  this.$Message.success("已取消");
         },
@@ -1132,7 +1260,8 @@ export default {
           this.cameraInfo.name +
           "】,删除后不可恢复，确认要删除吗",
         onOk: () => {
-          this.$api.wareHouse.delCamera(item.id).then(res => {
+          this.$api.wareHouse.delCamera(this.cameraInfo.id).then(res => {
+            this.showCameraFlag = false;
             this.$Message.success("删除成功");
             this.queryAllData();
           });

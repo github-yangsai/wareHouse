@@ -1,15 +1,14 @@
 <template>
   <div>
     <div>
-      <Spin size="large" fix v-if="loading"></Spin>
       <!-- <input type="button" value="新增区域" @click="add" />
       <input type="button" value="清除" @click="clearAll" />
       <input type="button" value="删除指定区域" @click="removePolygon(activePoint)" />
       <input type="button" value="撤销上一步" @click="undo" />-->
       <div class="capture_box">
         <!-- {{points}} -->
-        <div class="img_box" id="image_container">
-          <img :src="'http://192.168.16.228:9999/' + this.img_url" />
+        <div class="img_box">
+          <img :src="'http://192.168.16.228:8888/' + this.data.img_url" id="image_container"/>
           <canvas
             width="100%"
             class="canvas"
@@ -72,34 +71,42 @@ export default {
       image: null,
       enabled: "*",
       palette: ["#FF0000", "#FFFF00", "#0000FF", "#008000", "#C0C0C0"],
-      active: 0,
-      loading: false
+      active: 0
     };
   },
   mounted() {
-    // this.init();
+    this.init();
   },
   computed: {
     areaFlag() {
       return this.$store.state.areaFlag;
-    },
-    img_url() {
-      return this.data.img_url;
-    },
-    cameraZones() {
-      return this.data.zones;
     }
   },
   methods: {
     init() {
       this.$canvas = document.getElementById("canvas");
       this.ctx = document.getElementById("canvas").getContext("2d");
-      this.image = document.getElementById("image_container");
-      this.image.firstChild.onload = this.resize;
+      // this.image = new Image();
+      this.image.src = "http://192.168.16.228:8888/" + this.data.img_url;
+      this.image.onload = this.resize;
+      this.$canvas.style.background = "url(" + this.image.src + ")";
+
+      // this.image = document.getElementById("image_container");
+
+
+      
       if (this.areaFlag) {
+        this.$canvas = document.getElementById("canvas");
+        this.ctx = document.getElementById("canvas").getContext("2d");
+        this.image = new Image();
+        this.image.src = "http://192.168.16.228:8888/" + this.data.img_url;
+        this.image.onload = this.resize;
+        this.$canvas.style.background = "url(" + this.image.src + ")";
+
         //新增与编辑区域
         let zones = this.data.zones;
         this.points = [];
+
         for (let i = 0; i < zones.length; i++) {
           if (zones[i].points) {
             this.points.push(zones[i].points);
@@ -140,12 +147,8 @@ export default {
       this.draw();
     },
     resize() {
-      this.$canvas.width = this.image.offsetWidth;
-      this.$canvas.height = this.image.offsetHeight;
-      this.loading = false;
-      let imgWidth = this.image.offsetWidth;
-      let imgHeight = this.image.offsetHeight;
-      this.$emit("updateCameraInfo", { width: imgWidth, height: imgHeight });
+      this.$canvas.width = this.image.width;
+      this.$canvas.height = this.image.height;
       this.draw();
     },
     rightClick(e) {
@@ -373,17 +376,6 @@ export default {
     }
   },
   watch: {
-    areaFlag(val){
-      if(val){
-        this.init();
-      }
-    },
-    img_url(val) {
-      if (val && val != "http://") {
-        this.loading = true;
-        this.resize();
-      }
-    },
     active(newVal, oldVal) {
       if (newVal != oldVal) this.draw();
     },
@@ -392,9 +384,9 @@ export default {
         this.draw();
         //区域变化时数据更新
         let index = this.active;
-        let [...arr] = this.points[index];
-        if (this.data.zones.length) {
-          this.data.zones[index].points = arr;
+        // let [...arr] = this.points[index];
+        if(this.data.zones.length){
+        this.data.zones[index].points = this.points[index];
         }
       },
       deep: true
@@ -415,8 +407,8 @@ export default {
 .img_box {
   position: relative;
 }
-.img_box img {
-  width: 100%;
+.img_box img{
+  width:100%;
 }
 
 .img_box canvas {

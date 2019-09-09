@@ -9,7 +9,7 @@
  const wareHouse = {
      // 查询NVR
      queryNvr () {
-         return axios.get(`${base.nvrs}`);
+         return axios.get(`${base.nvrs}/`);
      },
       //修改NVR
      reviewNvr (id,params) {
@@ -21,15 +21,15 @@
     },
      //删除NVR
      delNvr (id) {
-        return axios.delete(`${base.nvr}/${id}`);
+        return axios.delete(`${base.nvr}/${id}/`);
     },
      //删除摄像头
      delCamera (id) {
-        return axios.delete(`${base.camera}/${id}`,);
+        return axios.delete(`${base.camera}/${id}/`,);
     },
     //新增NVR
     addNvr(params) {
-        return axios.post(`${base.nvr}`, params);
+        return axios.post(`${base.nvrs}/`, params);
     },
     //新增摄像头
     addCamera (params) {
