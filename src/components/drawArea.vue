@@ -2,10 +2,6 @@
   <div>
     <div>
       <Spin size="large" fix v-if="loading"></Spin>
-      <!-- <input type="button" value="新增区域" @click="add" />
-      <input type="button" value="清除" @click="clearAll" />
-      <input type="button" value="删除指定区域" @click="removePolygon(activePoint)" />
-      <input type="button" value="撤销上一步" @click="undo" />-->
       <div class="capture_box">
         <!-- {{points}} -->
         <div class="img_box" id="image_container">
@@ -22,17 +18,13 @@
         </div>
       </div>
     </div>
-    <!-- <div class="show_box" id="show_line">
-      <canvas class="canvas_box"></canvas>
-      <img src="../../static/images/background.jpg" />
-    </div>-->
   </div>
 </template>
 <script>
 export default {
   name: "drawArea",
   components: {},
-  props: ["data", "notSave","lineWidth"],
+  props: ["data", "notSave", "lineWidth","lineColor","index"],
   data() {
     return {
       points: [
@@ -71,9 +63,12 @@ export default {
       ctx: null,
       image: null,
       enabled: "*",
-      palette: ["#FF0000", "#FFFF00", "#0000FF", "#008000", "#C0C0C0"],
+      // palette: ["#FF0000", "#FFFF00", "#0000FF", "#008000", "#C0C0C0"],
+      // palette:[{color:"#FF0000",alpha:1,lineWidth:1},{color:"#FFFF00",alpha:1,lineWidth:4},{color:"#0000FF",alpha:1,lineWidth:8},{color:"#008000",alpha:1,lineWidth:1}],
+      palette:[],
       active: 0,
-      loading: false
+      loading: false,
+      lines: []
     };
   },
   created() {},
@@ -104,23 +99,24 @@ export default {
       this.$canvas = document.getElementById("canvas");
       this.ctx = document.getElementById("canvas").getContext("2d");
       this.image = document.getElementById("image_container");
-      // this.lineWidth = this.data
-
-      // this.image.addEventListener("onresize", () => {
-      //   this.$nextTick(() => {
-      //     this.resize();
-      //   });
-      // });
+     
       if (this.areaFlag) {
         //新增与编辑区域
         let zones = this.data.zones;
         this.points = [];
+        this.lines = [];
         for (let i = 0; i < zones.length; i++) {
           if (zones[i].points && zones[i].points.length) {
             this.points.push(zones[i].points);
+
+            //颜色笔触、线宽
+            let color = this.colorRGB2Hex(zones[i].line_color);
+            this.palette.push(zones[i].line_color);
+            // this.palette.push(this.colorRGB2Hex(zones[i].line_color));
+            this.lines.push(zones[i].line_width);
           }
         }
-         this.image.firstChild.onload = this.resize;
+        this.image.firstChild.onload = this.resize;
         // this.resize();
       }
     },
@@ -132,7 +128,7 @@ export default {
       this.points = [];
     },
     undo() {
-      this.points[this.activePoint].splice(-1, 1);
+      this.points[this.active].splice(-1, 1);
     },
     add() {
       // 新增区域
@@ -158,7 +154,7 @@ export default {
     },
     resize() {
       if (this.image.offsetWidth) {
-        console.log(11)
+        console.log(11);
         this.$canvas.width = this.image.offsetWidth;
         this.$canvas.height = this.image.offsetHeight;
         this.loading = false;
@@ -179,9 +175,13 @@ export default {
               );
             }
           }
+          //线宽比例计算
+          for(let i = 0; i < this.lines.length;i++){
+            this.lines[i] = parseInt((this.lines[i] / this.data.width) * imgWidth);
+          }
         }
       }
-      if (this.points.length>0) {
+      if (this.points.length > 0) {
         this.draw();
       }
     },
@@ -354,11 +354,15 @@ export default {
       //设置绘制的图像在源图像之上
       ctx.globalCompositeOperation = "destination-over";
       //设置填充的颜色
+      //  let rgb = this.palette[p].split(",");
+      // ctx.fillStyle ="rgba(" + parseInt(rgb[0].split(")")[0]) + "," + parseInt(rgb[1].split(")")[0]) + "," + parseInt(rgb[2].split(")")[0]) + ",0.3)";
       ctx.fillStyle = "rgb(255,255,255)";
       //设置绘制的笔触
       ctx.strokeStyle = this.palette[p];
+      //  let rgb = this.palette[p].split(",");
+      // ctx.strokeStyle = `rgba(${parseInt(rgb[0].split(")")[0])},${parseInt(rgb[1].split(")")[0])},${parseInt(rgb[2].split(")")[0])},${parseFloat(rgb[3].split(")")[0])}`;
       //设置线条的宽度
-      ctx.lineWidth = this.lineWidth;
+      ctx.lineWidth = this.lines[p];
       //开始绘制
       ctx.beginPath();
       // ctx.moveTo(points[0], points[1]);
@@ -374,23 +378,37 @@ export default {
       }
       //创建从当前点回到起始点的路径
       ctx.closePath();
-      if (!this.palette[p]) {
-        this.palette[p] =
-          "#" +
-          (function lol(m, s, c) {
-            return s[m.floor(m.random() * s.length)] + (c && lol(m, s, c - 1));
-          })(Math, "0123456789ABCDEF", 4);
-      }
+      // if (!this.palette[p]) {
+      //   this.palette[p] =
+      //     "#" +
+      //     (function lol(m, s, c) {
+      //       return s[m.floor(m.random() * s.length)] + (c && lol(m, s, c - 1));
+      //     })(Math, "0123456789ABCDEF", 4);
+      // }
       //得到需要填充的颜色
-      var fillColor = this.hexToRgb(this.palette[p]);
+      // var fillColor = this.hexToRgb(this.palette[p]);
       // //设置需要填充的颜色
-      ctx.fillStyle =
-        "rgba(" + fillColor.r + "," + fillColor.g + "," + fillColor.b + ",0.3)";
-      ctx.fillStyle = "rgba(255,0,0,0.3)";
+      debugger
+      let rgb;
+      rgb = this.palette[p].split(",");
+      rgb[3] = "0.3)";
+      console.log(rgb)
+      ctx.fillStyle = rgb.join();
+      // ctx.fillStyle = `rgba(${parseInt(rgb[0].split(")")[0])},${parseInt(rgb[1].split(")")[0])},${parseInt(rgb[2].split(")")[0])},0.3}`;
       //填充当前路径
       ctx.fill();
       //绘制已存在的路径
       ctx.stroke();
+    },
+    colorRGB2Hex(color) {
+      var rgb = color.split(",");
+      var r = parseInt(rgb[0].split("(")[1]);
+      var g = parseInt(rgb[1]);
+      var b = parseInt(rgb[2].split(")")[0]);
+
+      var hex =
+        "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+      return hex;
     },
     hexToRgb(hex) {
       // 得到颜色
@@ -410,7 +428,9 @@ export default {
     }
   },
   watch: {
-    lineWidth(){
+    lineWidth(val) {
+      // this.palette[this.active].lineWidth = val;
+      this.lines[this.active] = val;
       this.draw();
     },
     areaFlag(val) {
@@ -418,13 +438,6 @@ export default {
         this.init();
       }
     },
-    // img_url(val) {
-    //   if (val && val != "http://") {
-    //     this.loading = true;
-    //     debugger
-    //     this.resize();
-    //   }
-    // },
     active(newVal, oldVal) {
       if (newVal != oldVal) this.draw();
     },
@@ -437,6 +450,14 @@ export default {
         if (this.data.zones.length) {
           this.data.zones[index].points = arr;
         }
+      },
+      deep: true
+    },
+    lineColor:{
+       handler(val) {
+         this.palette[this.index] = val;
+        // this.palette[this.index] = this.colorRGB2Hex(val);
+        this.draw();
       },
       deep: true
     }

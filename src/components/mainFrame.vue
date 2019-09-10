@@ -82,6 +82,8 @@
           <draw-area
             :data="cameraInfo"
             :lineWidth="strokeVal"
+            :lineColor="lineColor"
+            :index="selectedArea"
             @updateCameraInfo="updateCameraInfo"
             :notSave="notSave"
             ref="drawAreaBox"
@@ -119,10 +121,11 @@
                 <div class="color_box">
                   <ColorPicker
                     v-model="item.line_color"
-                    @on-active-change="updateColor(index)"
+                    @on-change="updateColor"
                     size="small"
                     placement="bottom-start"
                     alpha
+                    editable
                   />
                 </div>
                 <a href="javascript:void(0)" class="delarea_btn" @click="delArea(item,index)">
@@ -131,7 +134,6 @@
                 <a href="javascript:void(0)" class="editarea_name" @click="editAreaName(index)">
                   <Icon type="md-create" />
                 </a>
-                <!-- <i-input :value="cameraInfo.count" placeholder="请输入通道数" v-if=""></i-input> -->
               </li>
             </ul>
           </div>
@@ -176,12 +178,19 @@ export default {
       areaData: {},
       showLineFlag: false,
       resultData: {},
-      screenWidth: 0
+      screenWidth: 0,
+      lineColor: null
     };
   },
   watch: {
-    screenWidth(val) {
-      console.log(val);
+    screenWidth(val){
+      console.log(val)
+      // this.$nextTick(()=>{
+      //    this.$refs.drawAreaBox.draw();
+      // })
+    },
+    selectedArea(val) {
+      this.strokeVal = this.areaList[val].line_width;
     },
     cameraInfo: {
       handler(newVal, oldVal) {
@@ -210,36 +219,42 @@ export default {
   },
   mounted() {
     this.queryAllData();
-    // const that = this;
-    // window.onresize = () => {
+    let _this = this;
+    //  window.onresize = () => {
     //   return (() => {
     //     window.screenWidth = document.body.clientWidth;
-    //     that.screenWidth = window.screenWidth;
-    //     that.$nextTick(() => {
-    //       that.$refs.drawAreaBox.resize();
-    //     });
+    //     _this.screenWidth = window.screenWidth;
     //   })();
     // };
-    // window.addEventListener("onresize", ()=>{
+    // window.addEventListener("resize", ()=>{
     //   this.$nextTick(() => {
+    //     console.log(22)
     //     this.$refs.drawAreaBox.resize();
     //   });
     // })
+    window.onkeydown = (e) =>{
+      if(this.showCameraFlag && this.cameraInfo.img_url){
+        if(e.ctrlKey && e.keyCode == 90){
+          this.$refs.drawAreaBox.undo();
+        }
+      }
+    }
   },
   methods: {
-    changeLinewidth(val){
+    changeLinewidth(val) {
       //改变描边时
       let areaIdx = this.selectedArea;
-      if(areaIdx == 0 || areaIdx){
-        this.$set(this.cameraInfo.zones[areaIdx],"line_width",val);
+      if (areaIdx == 0 || areaIdx) {
+        this.$set(this.cameraInfo.zones[areaIdx], "line_width", val);
       }
     },
-    updateColor(index) {
-      this.$set(
-        this.areaList[index],
-        "line_color",
-        this.areaList[index].line_color
-      );
+    updateColor(val) {
+      // this.$set(
+      //   this.areaList[index],
+      //   "line_color",
+      //   this.areaList[index].line_color
+      // );
+      this.lineColor = val;
     },
     updateCameraInfo(obj) {
       //区域信息更新到摄像头信息
@@ -1056,6 +1071,7 @@ export default {
         }
       ];
       this.$api.wareHouse.queryNvr().then(res => {
+        console.log(res)
         if (res.data.results) {
           this.nvrList = res.data.results;
         }
@@ -1205,6 +1221,7 @@ export default {
         onCancel: () => {}
       });
     },
+    dealColor(rgbStr) {},
     queryCamera(id) {
       //查询单个摄像头数据
       let _this = this;
@@ -1213,10 +1230,18 @@ export default {
         .queryCamera(id)
         .then(res => {
           if (res && res.data) {
+            //将颜色转换成rgba
+            //  let zones = res.data.zones;
+            //   if(zones && zones.length){
+            //     for(let i = 0; i < zones.length;i++){
+            //        res.data.zones[i].line_color = this.dealColor(zones[i].line_red,zones[i].line_green,zones[i].line_blue,zones[i].line_alpha)
+            //     }
+            //   }
+
             this.cameraInfo = res.data;
             for (let i = 0; i < this.areaList.length; i++) {
               this.areaList[i].showAreaInput = false;
-              this.areaList[i].line_color = "rgba(255,0,0,1)";
+              // this.areaList[i].line_color = "rgba(255,0,0,1)";
             }
             this.$store.commit("changeAreaFlag", true);
             if (id) {
@@ -1236,11 +1261,24 @@ export default {
       //新增或修改摄像头信息和区域
       this.$refs.drawAreaBox.updateWidth();
       let data = this.cameraInfo;
-      if(!this.cameraInfo.nvr_channel){
+      if (!this.cameraInfo.nvr_channel) {
         this.$Message.info("通道数不能为空");
-        return false
+        return false;
       }
-       this.loading = true;
+      this.loading = true;
+      //组装颜色参数
+
+      if (this.cameraInfo.zones) {
+        let zones = this.cameraInfo.zones;
+        for (let i = 0; i < zones.length; i++) {
+          let rgb = zones[i].line_color.split(",");
+          zones[i].line_red = parseInt(rgb[0].split("(")[1]);
+          zones[i].line_green = parseInt(rgb[1]);
+          zones[i].line_blue = parseInt(rgb[2].split(")")[0]);
+          zones[i].line_alpha = parseInt(parseFloat(rgb[3].split(")")[0])*255);
+        }
+      }
+
       if (this.cameraInfo.id) {
         this.$api.wareHouse
           .reviewCamera(this.cameraInfo.id, data)
@@ -1260,11 +1298,11 @@ export default {
         this.$api.wareHouse
           .addCamera(data)
           .then(res => {
-            console.log(res)
+            console.log(res);
             if (res && res.data) {
               this.cameraInfo = res.data;
             }
-            debugger
+            debugger;
             this.loading = false;
             this.$Message.success("新增成功");
             let _this = this;
@@ -1495,12 +1533,13 @@ export default {
   line-height: 50px;
 }
 .fill_box .ivu-input,
-.setting_wrap .ivu-input,.setting_wrap .ivu-input-number {
+.setting_wrap .ivu-input,
+.setting_wrap .ivu-input-number {
   background: #071826;
   border: 1px #5d7388 solid;
   color: #fff;
 }
-.setting_wrap .ivu-input-number-input{
+.setting_wrap .ivu-input-number-input {
   background: #071826;
   color: #fff;
 }
