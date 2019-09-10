@@ -17,8 +17,8 @@
             id="canvas"
             @mousedown="mousedown"
             @mouseup="stopdrag"
+            @contextmenu.stop.prevent="rightClick"
           ></canvas>
-          <!-- @contextmenu.stop.prevent="rightClick" -->
         </div>
       </div>
     </div>
@@ -32,7 +32,7 @@
 export default {
   name: "drawArea",
   components: {},
-  props: ["data", "notSave"],
+  props: ["data", "notSave","lineWidth"],
   data() {
     return {
       points: [
@@ -76,35 +76,52 @@ export default {
       loading: false
     };
   },
+  created() {},
   mounted() {
-    // this.init();
+    this.$canvas = document.getElementById("canvas");
+    this.ctx = document.getElementById("canvas").getContext("2d");
+    this.image = document.getElementById("image_container");
   },
   computed: {
     areaFlag() {
       return this.$store.state.areaFlag;
     },
     img_url() {
-      return this.data.img_url;
+      return this.data.img_url ? this.data.img_url : "";
     },
     cameraZones() {
       return this.data.zones;
     }
   },
   methods: {
+    updateWidth() {
+      this.$emit("updateCameraInfo", {
+        width: this.image.offsetWidth,
+        height: this.image.offsetHeight
+      });
+    },
     init() {
       this.$canvas = document.getElementById("canvas");
       this.ctx = document.getElementById("canvas").getContext("2d");
       this.image = document.getElementById("image_container");
-      this.image.firstChild.onload = this.resize;
+      // this.lineWidth = this.data
+
+      // this.image.addEventListener("onresize", () => {
+      //   this.$nextTick(() => {
+      //     this.resize();
+      //   });
+      // });
       if (this.areaFlag) {
         //新增与编辑区域
         let zones = this.data.zones;
         this.points = [];
         for (let i = 0; i < zones.length; i++) {
-          if (zones[i].points) {
+          if (zones[i].points && zones[i].points.length) {
             this.points.push(zones[i].points);
           }
         }
+         this.image.firstChild.onload = this.resize;
+        // this.resize();
       }
     },
     changeActive(index) {
@@ -140,13 +157,33 @@ export default {
       this.draw();
     },
     resize() {
-      this.$canvas.width = this.image.offsetWidth;
-      this.$canvas.height = this.image.offsetHeight;
-      this.loading = false;
-      let imgWidth = this.image.offsetWidth;
-      let imgHeight = this.image.offsetHeight;
-      this.$emit("updateCameraInfo", { width: imgWidth, height: imgHeight });
-      this.draw();
+      if (this.image.offsetWidth) {
+        console.log(11)
+        this.$canvas.width = this.image.offsetWidth;
+        this.$canvas.height = this.image.offsetHeight;
+        this.loading = false;
+        let imgWidth = this.image.offsetWidth;
+        let imgHeight = this.image.offsetHeight;
+
+        //如果后台返回的宽度和当前用户图片容器的宽度不一样，则按比例缩放点的坐标
+        if (this.data.width && this.data.width != imgWidth) {
+          for (let i = 0; i < this.points.length; i++) {
+            for (let j = 0; j < this.points[i].length; j++) {
+              let pointX = this.points[i][j][0];
+              let pointY = this.points[i][j][1];
+              this.points[i][j][0] = Math.round(
+                (pointX / this.data.width) * imgWidth
+              );
+              this.points[i][j][1] = Math.round(
+                (pointY / this.data.height) * imgHeight
+              );
+            }
+          }
+        }
+      }
+      if (this.points.length>0) {
+        this.draw();
+      }
     },
     rightClick(e) {
       if (!e.offsetX) {
@@ -321,7 +358,7 @@ export default {
       //设置绘制的笔触
       ctx.strokeStyle = this.palette[p];
       //设置线条的宽度
-      ctx.lineWidth = 1;
+      ctx.lineWidth = this.lineWidth;
       //开始绘制
       ctx.beginPath();
       // ctx.moveTo(points[0], points[1]);
@@ -373,17 +410,21 @@ export default {
     }
   },
   watch: {
-    areaFlag(val){
-      if(val){
+    lineWidth(){
+      this.draw();
+    },
+    areaFlag(val) {
+      if (val) {
         this.init();
       }
     },
-    img_url(val) {
-      if (val && val != "http://") {
-        this.loading = true;
-        this.resize();
-      }
-    },
+    // img_url(val) {
+    //   if (val && val != "http://") {
+    //     this.loading = true;
+    //     debugger
+    //     this.resize();
+    //   }
+    // },
     active(newVal, oldVal) {
       if (newVal != oldVal) this.draw();
     },

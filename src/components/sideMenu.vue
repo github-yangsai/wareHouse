@@ -42,7 +42,13 @@
       </Col>
     </Row>
     <!--编辑NVR弹框-->
-    <edit-NVR :openFlag="nvrFlag" :funtionFlag="nvrF" :data="itemNvr" @closePopup="closePopup" @queryAllData="queryAllData"></edit-NVR>
+    <edit-NVR
+      :openFlag="nvrFlag"
+      :funtionFlag="nvrF"
+      :data="itemNvr"
+      @closePopup="closePopup"
+      @queryAllData="queryAllData"
+    ></edit-NVR>
     <!-- <camera-info :openFlag="cameraFlag" :funtionFlag="cameraF" @closePopup="closeCamera"></camera-info> -->
   </div>
 </template>
@@ -80,6 +86,10 @@ export default {
       let flag;
       if (val === 0 || val) {
         flag = true;
+        if (this.nvrList[this.selectedNvr].cameras) {
+          //新增摄像头成功后ID未刷新问题
+          this.cameraList = this.nvrList[this.selectedNvr].cameras;
+        }
         if (!this.cameraList[val].id) {
           //新增
           itemData = this.defaultCamera;
@@ -92,14 +102,10 @@ export default {
     }
   },
   methods: {
-    cancelAddCamera(){
-      //取消新增摄像头
-      this.cameraList.splice(this.selectedCamera,1);
-      // if( this.cameraList.length){
-      //   this.selectedCamera
-      // }
+    delCamera(id) {
+      this.cameraList.splice(this.selectedCamera, 1);
     },
-    queryAllData(){
+    queryAllData() {
       this.$emit("queryAllData");
     },
     delNvr(event, item) {
@@ -137,14 +143,17 @@ export default {
         nvr: {
           id: this.nvrList[this.selectedNvr].id
         },
-        zones:[]
+        zones: []
       };
       this.cameraList.push(defaultCamera);
       this.defaultCamera = defaultCamera;
       this.selectedCamera = this.cameraList.length
         ? this.cameraList.length - 1
         : 0;
-      this.$emit("clickedCamera", true, defaultCamera);
+      this.$emit("clickedCamera", false, defaultCamera);
+    },
+    updateCameraList() {
+      this.cameraList = this.nvrList[this.selectedNvr].cameras;
     },
     editCamera(event, i) {
       this.selectedCameraIdx = i;
@@ -160,9 +169,8 @@ export default {
       this.$store.commit("changeAreaFlag", false);
       this.selectedCamera = "";
       this.selectedNvr = i;
-      this.cameraList = JSON.parse(JSON.stringify(this.nvrList[i].cameras));
+      this.cameraList = this.nvrList[i].cameras;
       this.$emit("updateCameraInfo");
-      
     }
   }
 };
@@ -199,7 +207,6 @@ export default {
 .nvr_tab li span {
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
   transition: width 0.3s;
   width: 50px;
 }

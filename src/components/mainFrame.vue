@@ -1,6 +1,9 @@
 <template>
   <div>
-    <Spin size="large" fix v-if="loading"></Spin>
+    <Spin size="large" fix v-if="loading">
+      <!-- <Icon type="ios-loading" size="18" class="demo-spin-icon-load"></Icon>
+      <div>加载中...</div>-->
+    </Spin>
     <Layout class="con_wrap">
       <Header>
         <div class="file_bar">
@@ -26,16 +29,16 @@
             v-if="showCameraFlag && this.cameraInfo.img_url && cameraInfo.img_url!='http://'"
           >
             <span class="field_name">描边：</span>
-            <Input v-model="strokeVal" type="number"></Input>
+            <InputNumber :max="10" :min="1" v-model="strokeVal" @on-change="changeLinewidth"></InputNumber>
+            <!-- <Input v-model="strokeVal" type="number"></Input> -->
             <!-- <Select v-model="line_width" size="small" style="width:76px;">
               <Option
                 v-for="item in strokeWidthList"
                 :value="item.line_width"
                 :key="item.line_width"
               >{{ item.label }}</Option>
-            </Select> -->
+            </Select>-->
           </div>
-         
 
           <div class="function_box" v-if="showCameraFlag" style="float:left;">
             <div class="clearfix">
@@ -49,7 +52,7 @@
               </div>
               <div class="clearfix fill_box">
                 <span class="field">通道数：</span>
-                <Input v-model="cameraInfo.count" placeholder="请输入通道数" />
+                <Input v-model="cameraInfo.nvr_channel" type="number" placeholder="请输入通道数" />
               </div>
               <div class="fill_box">
                 <a href="javascript:void(0)" class="capture_btn" @click="clickCapture">点击截屏</a>
@@ -78,6 +81,7 @@
         <Content>
           <draw-area
             :data="cameraInfo"
+            :lineWidth="strokeVal"
             @updateCameraInfo="updateCameraInfo"
             :notSave="notSave"
             ref="drawAreaBox"
@@ -171,12 +175,17 @@ export default {
       loading: false,
       areaData: {},
       showLineFlag: false,
-      resultData: {}
+      resultData: {},
+      screenWidth: 0
     };
   },
   watch: {
+    screenWidth(val) {
+      console.log(val);
+    },
     cameraInfo: {
       handler(newVal, oldVal) {
+        // console.log(val)
         if (
           newVal.zones &&
           newVal.zones.length &&
@@ -187,9 +196,6 @@ export default {
         } else {
           this.notSave = true;
         }
-        // if (newVal.id != oldVal.id) {
-        //   this.$store.commit("changeAreaFlag", false);
-        // }
       },
       deep: true
     }
@@ -204,10 +210,36 @@ export default {
   },
   mounted() {
     this.queryAllData();
+    // const that = this;
+    // window.onresize = () => {
+    //   return (() => {
+    //     window.screenWidth = document.body.clientWidth;
+    //     that.screenWidth = window.screenWidth;
+    //     that.$nextTick(() => {
+    //       that.$refs.drawAreaBox.resize();
+    //     });
+    //   })();
+    // };
+    // window.addEventListener("onresize", ()=>{
+    //   this.$nextTick(() => {
+    //     this.$refs.drawAreaBox.resize();
+    //   });
+    // })
   },
   methods: {
-    updateColor(index){
-      this.$set(this.areaList[index],"line_color",this.areaList[index].line_color);
+    changeLinewidth(val){
+      //改变描边时
+      let areaIdx = this.selectedArea;
+      if(areaIdx == 0 || areaIdx){
+        this.$set(this.cameraInfo.zones[areaIdx],"line_width",val);
+      }
+    },
+    updateColor(index) {
+      this.$set(
+        this.areaList[index],
+        "line_color",
+        this.areaList[index].line_color
+      );
     },
     updateCameraInfo(obj) {
       //区域信息更新到摄像头信息
@@ -235,19 +267,23 @@ export default {
         .then(res => {
           if (res.data) {
             let img_url = res.data.img_data_url;
-            _this.cameraInfo.img_url = img_url;
+            _this.$set(_this.cameraInfo, "img_url", img_url);
+            this.$store.commit("changeAreaFlag", true);
+            _this.$nextTick(() => {
+              _this.$refs.drawAreaBox.resize();
+            });
             this.loading = false;
-            let _image = new Image();
-            _image.src = "http://192.168.16.228:8888/" + img_url;
-            _image.onload = function() {
-              _this.cameraInfo.width = _image.width;
-              _this.cameraInfo.height = _image.height;
-            };
+            // let _image = new Image();
+            // _image.src = "http://192.168.16.228:8888/" + img_url;
+            // _image.onload = function() {
+            //   _this.cameraInfo.width = _image.width;
+            //   _this.cameraInfo.height = _image.height;
+            // };
           }
         })
         .catch(function(error) {
-          _this.$Message.error(error);
-          _this.loading = false;
+          // _this.$Message.error(error);
+          // _this.loading = false;
         });
     },
     queryAllData() {
@@ -1025,23 +1061,14 @@ export default {
         }
       });
     },
-    clickedCamera(isClicked, data) {
-      this.showCameraFlag = isClicked;
+    clickedCamera(isEdit, data) {
+      this.showCameraFlag = true;
       this.cameraInfo = {};
       this.resultData = JSON.parse(JSON.stringify(data));
-      if (isClicked) {
-        this.cameraInfo = JSON.parse(JSON.stringify(data));
-        for (let i = 0; i < this.areaList.length; i++) {
-          this.areaList[i].showAreaInput = false;
-          this.areaList[i].line_color = "rgba(255,0,0,1)";
-        }
-        this.$store.commit("changeAreaFlag", true);
-        // console.log("是否相等" + this.deepCompare(this.resultData,this.cameraInfo));
-        if (data.id) {
-          this.$nextTick(() => {
-            this.$refs.drawAreaBox.init();
-          });
-        }
+      if (isEdit) {
+        this.queryCamera(data.id);
+      } else {
+        this.cameraInfo = data;
       }
     },
     deepCompare(x, y) {
@@ -1171,29 +1198,86 @@ export default {
           } else {
             //取消新增
             this.showCameraFlag = false;
-            this.$refs.sideMenu.cancelAddCamera();
+            this.$refs.sideMenu.delCamera();
           }
           //  this.$Message.success("已取消");
         },
         onCancel: () => {}
       });
     },
+    queryCamera(id) {
+      //查询单个摄像头数据
+      let _this = this;
+      this.loading = true;
+      this.$api.wareHouse
+        .queryCamera(id)
+        .then(res => {
+          if (res && res.data) {
+            this.cameraInfo = res.data;
+            for (let i = 0; i < this.areaList.length; i++) {
+              this.areaList[i].showAreaInput = false;
+              this.areaList[i].line_color = "rgba(255,0,0,1)";
+            }
+            this.$store.commit("changeAreaFlag", true);
+            if (id) {
+              this.$nextTick(() => {
+                _this.$refs.drawAreaBox.init();
+              });
+            }
+          }
+          this.loading = false;
+        })
+        .catch(e => {
+          this.loading = false;
+          this.$Message.error(e);
+        });
+    },
     saveAllData() {
       //新增或修改摄像头信息和区域
+      this.$refs.drawAreaBox.updateWidth();
       let data = this.cameraInfo;
-      this.loading = true;
+      if(!this.cameraInfo.nvr_channel){
+        this.$Message.info("通道数不能为空");
+        return false
+      }
+       this.loading = true;
       if (this.cameraInfo.id) {
-        this.$api.wareHouse.reviewCamera(this.cameraInfo.id, data).then(res => {
-          this.loading = false;
-          this.$Message.success("保存成功");
-          this.queryAllData();
-        });
+        this.$api.wareHouse
+          .reviewCamera(this.cameraInfo.id, data)
+          .then(res => {
+            if (res && res.data) {
+              this.cameraInfo = res.data;
+            }
+            this.loading = false;
+            this.$Message.success("保存成功");
+            this.queryAllData();
+          })
+          .catch(e => {
+            this.loading = false;
+            this.$Message.error(e);
+          });
       } else {
-        this.$api.wareHouse.addCamera(data).then(res => {
-          this.loading = false;
-          this.$Message.success("新增成功");
-          this.queryAllData();
-        });
+        this.$api.wareHouse
+          .addCamera(data)
+          .then(res => {
+            console.log(res)
+            if (res && res.data) {
+              this.cameraInfo = res.data;
+            }
+            debugger
+            this.loading = false;
+            this.$Message.success("新增成功");
+            let _this = this;
+            this.queryAllData();
+            // _this.$refs.sideMenu.updateCameraList();
+            // this.queryAllData().then(()=>{
+            //   _this.$refs.sideMenu.updateCameraList();
+            // });
+          })
+          .catch(e => {
+            this.loading = false;
+            this.$Message.error(e);
+          });
       }
     },
     addArea() {
@@ -1202,11 +1286,12 @@ export default {
       let areaItem = {
         name: "仓库A" + num + "区域",
         points: [],
-        line_color:"rgba(255,0,0,1)"
+        line_color: "rgba(255,0,0,1)"
       };
       this.cameraInfo.zones.push(areaItem);
       this.num++;
       this.selectedArea = this.areaList.length - 1;
+      this.$refs.drawAreaBox.resize();
       this.$refs.drawAreaBox.add();
       // document.getElementsByTagName("body")[0].style.cursor = "crosshair"
     },
@@ -1247,7 +1332,8 @@ export default {
           this.$api.wareHouse.delCamera(this.cameraInfo.id).then(res => {
             this.showCameraFlag = false;
             this.$Message.success("删除成功");
-            this.queryAllData();
+            this.cameraInfo = {};
+            this.$refs.sideMenu.delCamera();
           });
         },
         onCancel: () => {}
@@ -1388,8 +1474,8 @@ export default {
 }
 
 /*填写摄像头信息*/
-.setting_wrap .ivu-input{
-  width:60px;
+.setting_wrap .ivu-input {
+  width: 60px;
 }
 .fill_box {
   float: left;
@@ -1408,9 +1494,14 @@ export default {
   width: 140px;
   line-height: 50px;
 }
-.fill_box .ivu-input,.setting_wrap .ivu-input {
+.fill_box .ivu-input,
+.setting_wrap .ivu-input,.setting_wrap .ivu-input-number {
   background: #071826;
   border: 1px #5d7388 solid;
+  color: #fff;
+}
+.setting_wrap .ivu-input-number-input{
+  background: #071826;
   color: #fff;
 }
 .del_btn {
