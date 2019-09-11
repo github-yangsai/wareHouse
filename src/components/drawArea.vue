@@ -153,7 +153,7 @@ export default {
       this.points = [];
       this.draw();
     },
-    resize(flag) {
+    resize(a,flag) {
       if (this.image.offsetWidth) {
         this.$canvas.width = this.image.offsetWidth;
         this.$canvas.height = this.image.offsetHeight;
@@ -162,7 +162,9 @@ export default {
         let imgHeight = this.image.offsetHeight;
 
         //如果后台返回的宽度和当前用户图片容器的宽度不一样，则按比例缩放点的坐标
-        if (this.data.width && (this.data.width != imgWidth || this.data.height != imgHeight) && !flag) {
+        //  || this.data.height != imgHeight
+        debugger
+        if (this.data.width && (this.data.width != imgWidth) && !flag) {
           for (let i = 0; i < this.points.length; i++) {
             for (let j = 0; j < this.points[i].length; j++) {
               let pointX = this.points[i][j][0];

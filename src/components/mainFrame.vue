@@ -179,7 +179,8 @@ export default {
       showLineFlag: false,
       resultData: {},
       screenWidth: 0,
-      lineColor: null
+      lineColor: null,
+      changeFlag:false
     };
   },
   watch: {
@@ -196,7 +197,7 @@ export default {
     },
     cameraInfo: {
       handler(newVal, oldVal) {
-        // console.log(val)
+        this.changeFlag = true;
         if (
           newVal.zones &&
           newVal.zones.length &&
@@ -1205,19 +1206,36 @@ export default {
 
       return true;
     },
-    compareObj(data,resultData){
+    compareObj(data, resultData){
+      let flag1 = true;
       for(let key in resultData){
-        // resultData[key]
+        if(key != "zones" && key != "nvr"){
+          if(resultData[key] != data[key]){
+            flag1 = false;
+            return flag1;
+          }
+        }
       }
+      //比较两个数组中点的数据
+      let reZones = resultData.zones;
+      let dataZones = data.zones;
+      if(reZones.length != dataZones.length){
+        flag1 = false;
+        return flag1;
+      }
+      for(let i = 0; i < reZones.length;i++){
+
+      }
+
     },
     cancelSave() {
       this.$Modal.confirm({
         title: "提示",
-        content: "确认取消保存？",
+        content: "数据未保存，确认取消吗？",
         onOk: () => {
           if (this.cameraInfo.id) {
             //取消修改
-
+           this.queryCamera(this.cameraInfo.id);
           } else {
             //取消新增
             this.showCameraFlag = false;
@@ -1237,6 +1255,7 @@ export default {
         .queryCamera(id)
         .then(res => {
           if (res && res.data) {
+            this.resultData = JSON.parse(JSON.stringify(res.data));
             this.cameraInfo = res.data;
             console.log(res.data)
             for (let i = 0; i < this.areaList.length; i++) {
@@ -1337,7 +1356,7 @@ export default {
       this.num++;
       this.selectedArea = this.areaList.length - 1;
       this.$refs.drawAreaBox.init();
-      this.$refs.drawAreaBox.resize(1);
+      this.$refs.drawAreaBox.resize(0,1);
       this.$refs.drawAreaBox.add();
     },
     editArea(i) {
