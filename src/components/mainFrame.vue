@@ -40,8 +40,12 @@
             </Select>-->
           </div>
 
-          <div class="function_box" v-if="showCameraFlag" style="float:left;">
+          <div class="function_box" v-if="showCameraFlag" style="float:left;position:absolute;left:250px;top:0;">
             <div class="clearfix">
+              <div class="clearfix fill_box">
+                <span class="field">编号：</span>
+                <Input v-model="cameraInfo.no" placeholder="请输入编号" style="width:80px" />
+              </div>
               <div class="clearfix fill_box">
                 <span class="field">摄像头名称：</span>
                 <Input v-model="cameraInfo.name" placeholder="请输入摄像头名称" />
@@ -51,8 +55,12 @@
                 <Input v-model="cameraInfo.rtsp_url" placeholder="请输入rtsp地址" />
               </div>
               <div class="clearfix fill_box">
-                <span class="field">通道数：</span>
-                <Input v-model="cameraInfo.nvr_channel" type="number" placeholder="请输入通道数" />
+                <span class="field">输出通道号：</span>
+                <Input v-model="cameraInfo.nvr_channel" type="number" placeholder="请输入通道号" style="width:50px;" />
+              </div>
+               <div class="clearfix fill_box">
+                <span class="field">输出端口：</span>
+                <Input v-model="cameraInfo.output_port" type="number" placeholder="请输入端口" style="width:50px;" />
               </div>
               <div class="fill_box">
                 <a href="javascript:void(0)" class="capture_btn" @click="clickCapture">点击截屏</a>
@@ -115,8 +123,21 @@
                   />
                 </div>
                 <span class="area_title">{{item.name}}</span>
-                <a href="javascript:void(0)" class="visible_btn">
+                <a
+                  href="javascript:void(0)"
+                  class="visible_btn"
+                  @click="displayArea(index)"
+                  v-if="item.visible"
+                >
                   <Icon type="md-eye" />
+                </a>
+                <a
+                  href="javascript:void(0)"
+                  class="visible_btn"
+                  @click="displayArea(index)"
+                  v-if="!item.visible"
+                >
+                  <Icon type="md-eye-off" />
                 </a>
                 <div class="color_box">
                   <ColorPicker
@@ -173,25 +194,25 @@ export default {
       showCameraFlag: false,
       cameraInfo: {},
       num: 1,
-      selectedArea:0,
+      selectedArea: 0,
       loading: false,
       areaData: {},
       showLineFlag: false,
       resultData: {},
       screenWidth: 0,
       lineColor: null,
-      changeFlag:false
+      changeFlag: false
     };
   },
   watch: {
-    screenWidth(val){
-      console.log(val)
+    screenWidth(val) {
+      console.log(val);
       // this.$nextTick(()=>{
       //    this.$refs.drawAreaBox.draw();
       // })
     },
     selectedArea(val) {
-      if(this.areaList.length){
+      if (this.areaList.length) {
         this.strokeVal = this.areaList[val].line_width;
       }
     },
@@ -235,15 +256,21 @@ export default {
     //     this.$refs.drawAreaBox.resize();
     //   });
     // })
-    window.onkeydown = (e) =>{
-      if(this.showCameraFlag && this.cameraInfo.img_url){
-        if(e.ctrlKey && e.keyCode == 90){
+    window.onkeydown = e => {
+      if (this.showCameraFlag && this.cameraInfo.img_url) {
+        if (e.ctrlKey && e.keyCode == 90) {
           this.$refs.drawAreaBox.undo();
         }
       }
-    }
+    };
   },
   methods: {
+    displayArea(index) {
+      let flag = this.areaList[index].visible;
+      this.$set(this.areaList[index], "visible", !flag);
+      this.$forceUpdate();
+      this.$refs.drawAreaBox.init();
+    },
     changeLinewidth(val) {
       //改变描边时
       let areaIdx = this.selectedArea;
@@ -254,7 +281,7 @@ export default {
     updateColor(val) {
       this.lineColor = val;
     },
-    updateCameraInfo(obj,source) {
+    updateCameraInfo(obj, source) {
       //区域信息更新到摄像头信息
       if (obj) {
         for (let key in obj) {
@@ -263,8 +290,8 @@ export default {
       } else {
         this.cameraInfo = {};
       }
-      if(source){
-         this.showCameraFlag = false;
+      if (source) {
+        this.showCameraFlag = false;
       }
     },
     clickCapture() {
@@ -298,8 +325,8 @@ export default {
           }
         })
         .catch(function(error) {
-          // _this.$Message.error(error);
-          // _this.loading = false;
+          _this.$Message.error(error);
+          _this.loading = false;
         });
     },
     queryAllData() {
@@ -1079,7 +1106,6 @@ export default {
     },
     clickedCamera(isEdit, data) {
       this.showCameraFlag = true;
-      this.cameraInfo = {};
       this.resultData = JSON.parse(JSON.stringify(data));
       if (isEdit) {
         this.queryCamera(data.id);
@@ -1088,6 +1114,14 @@ export default {
       }
       //设置区域默认值
       this.selectedArea = 0;
+      // if (this.changeFlag && this.cameraInfo.id) {
+      //   this.$Modal.confirm({
+      //     title: "提示",
+      //     content: "数据未保存，确认离开吗？",
+      //     onOk: () => {},
+      //     onCancel: () => {}
+      //   });
+      // }
     },
     deepCompare(x, y) {
       var i, l, leftChain, rightChain;
@@ -1206,11 +1240,11 @@ export default {
 
       return true;
     },
-    compareObj(data, resultData){
+    compareObj(data, resultData) {
       let flag1 = true;
-      for(let key in resultData){
-        if(key != "zones" && key != "nvr"){
-          if(resultData[key] != data[key]){
+      for (let key in resultData) {
+        if (key != "zones" && key != "nvr") {
+          if (resultData[key] != data[key]) {
             flag1 = false;
             return flag1;
           }
@@ -1219,14 +1253,11 @@ export default {
       //比较两个数组中点的数据
       let reZones = resultData.zones;
       let dataZones = data.zones;
-      if(reZones.length != dataZones.length){
+      if (reZones.length != dataZones.length) {
         flag1 = false;
         return flag1;
       }
-      for(let i = 0; i < reZones.length;i++){
-
-      }
-
+      for (let i = 0; i < reZones.length; i++) {}
     },
     cancelSave() {
       this.$Modal.confirm({
@@ -1235,7 +1266,7 @@ export default {
         onOk: () => {
           if (this.cameraInfo.id) {
             //取消修改
-           this.queryCamera(this.cameraInfo.id);
+            this.queryCamera(this.cameraInfo.id);
           } else {
             //取消新增
             this.showCameraFlag = false;
@@ -1257,11 +1288,12 @@ export default {
           if (res && res.data) {
             this.resultData = JSON.parse(JSON.stringify(res.data));
             this.cameraInfo = res.data;
-            console.log(res.data)
+            console.log(res.data);
             for (let i = 0; i < this.areaList.length; i++) {
               this.areaList[i].showAreaInput = false;
+              this.areaList[i].visible = true;
             }
-            if(this.areaList.length){
+            if (this.areaList.length) {
               this.strokeVal = this.areaList[0].line_width;
             }
             this.$store.commit("changeAreaFlag", true);
@@ -1296,7 +1328,9 @@ export default {
           zones[i].line_red = parseInt(rgb[0].split("(")[1]);
           zones[i].line_green = parseInt(rgb[1]);
           zones[i].line_blue = parseInt(rgb[2].split(")")[0]);
-          zones[i].line_alpha = parseInt(parseFloat(rgb[3].split(")")[0])*255);
+          zones[i].line_alpha = parseInt(
+            parseFloat(rgb[3].split(")")[0]) * 255
+          );
         }
       }
 
@@ -1306,6 +1340,10 @@ export default {
           .then(res => {
             if (res && res.data) {
               this.cameraInfo = res.data;
+              let zones = this.cameraInfo.zones;
+              for (let i = 0; i < zones.length; i++) {
+                zones[i].visible = true;
+              }
             }
             this.loading = false;
             this.$Message.success("保存成功");
@@ -1323,7 +1361,6 @@ export default {
             if (res && res.data) {
               this.cameraInfo = res.data;
             }
-            debugger;
             this.loading = false;
             this.$Message.success("新增成功");
             let _this = this;
@@ -1346,17 +1383,18 @@ export default {
         name: "区域" + num,
         points: [],
         line_color: "rgba(255,0,0,1)",
-        line_width:1,
-        showAreaInput:true
+        line_width: 1,
+        showAreaInput: true,
+        visible: true
       };
-      if(!this.cameraInfo.zones){
+      if (!this.cameraInfo.zones) {
         this.cameraInfo.zones = [];
       }
       this.cameraInfo.zones.push(areaItem);
       this.num++;
       this.selectedArea = this.areaList.length - 1;
       this.$refs.drawAreaBox.init();
-      this.$refs.drawAreaBox.resize(0,1);
+      this.$refs.drawAreaBox.resize(0, 1);
       this.$refs.drawAreaBox.add();
     },
     editArea(i) {
@@ -1413,6 +1451,7 @@ export default {
           "】,删除后不可恢复，确认要删除吗",
         onOk: () => {
           _this.cameraInfo.zones.splice(index, 1);
+          _this.$refs.drawAreaBox.delOthers(index);
           _this.$refs.drawAreaBox.removePolygon(index);
           _this.$Message.success("删除成功");
         },
@@ -1491,6 +1530,7 @@ export default {
   background: #283847;
   height: 50px;
   line-height: 50px;
+  position: relative;
 }
 .setting_wrap {
   position: relative;
@@ -1548,7 +1588,7 @@ export default {
 .fill_box .field {
   float: left;
   display: block;
-  width: 90px;
+  /* width: 90px; */
   font-size: 14px;
   color: #fff;
   text-align: right;
@@ -1752,7 +1792,7 @@ fieldset[disabled] .ivu-btn-primary:hover {
   color: #fff;
   background: #142e44;
 }
-.ivu-spin-fix{
-  background-color:rgba(255,255,255,.1);
+.ivu-spin-fix {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 </style>

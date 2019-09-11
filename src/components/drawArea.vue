@@ -66,6 +66,7 @@ export default {
       // palette: ["#FF0000", "#FFFF00", "#0000FF", "#008000", "#C0C0C0"],
       // palette:[{color:"#FF0000",alpha:1,lineWidth:1},{color:"#FFFF00",alpha:1,lineWidth:4},{color:"#0000FF",alpha:1,lineWidth:8},{color:"#008000",alpha:1,lineWidth:1}],
       palette: ["rgba(255,0,0,1)"],
+      visibles: [true],
       active: 0,
       loading: false,
       lines: [1]
@@ -106,6 +107,7 @@ export default {
         this.points = [];
         this.lines = [];
         this.palette = [];
+        this.visibles = [];
         for (let i = 0; i < zones.length; i++) {
           if (zones[i].points) {
             this.points.push(zones[i].points);
@@ -115,6 +117,7 @@ export default {
             // let color = this.colorRGB2Hex(zones[i].line_color);
             // this.palette.push(this.colorRGB2Hex(zones[i].line_color));
             this.lines.push(zones[i].line_width);
+            this.visibles.push(zones[i].visible);
           }
         }
         this.image.firstChild.onload = this.resize;
@@ -153,7 +156,7 @@ export default {
       this.points = [];
       this.draw();
     },
-    resize(a,flag) {
+    resize(a, flag) {
       if (this.image.offsetWidth) {
         this.$canvas.width = this.image.offsetWidth;
         this.$canvas.height = this.image.offsetHeight;
@@ -163,8 +166,7 @@ export default {
 
         //如果后台返回的宽度和当前用户图片容器的宽度不一样，则按比例缩放点的坐标
         //  || this.data.height != imgHeight
-        debugger
-        if (this.data.width && (this.data.width != imgWidth) && !flag) {
+        if (this.data.width && this.data.width != imgWidth && !flag) {
           for (let i = 0; i < this.points.length; i++) {
             for (let j = 0; j < this.points[i].length; j++) {
               let pointX = this.points[i][j][0];
@@ -354,7 +356,7 @@ export default {
       }
     },
     drawSingle(points, p) {
-      if(!points.length){
+      if (!points.length || !this.visibles[p]) {
         return false;
       }
       let ctx = this.$canvas.getContext("2d");
@@ -365,7 +367,14 @@ export default {
       // ctx.fillStyle ="rgba(" + parseInt(rgb[0].split(")")[0]) + "," + parseInt(rgb[1].split(")")[0]) + "," + parseInt(rgb[2].split(")")[0]) + ",0.3)";
       ctx.fillStyle = "rgb(255,255,255)";
       //设置绘制的笔触
-      ctx.strokeStyle = this.palette[p];
+      if (this.visibles[p]) {
+        ctx.strokeStyle = this.palette[p];
+      } else {
+        let colorAl = this.palette[p].split(",");
+        colorAl[3] = "0)";
+        ctx.strokeStyle = colorAl.join();
+      }
+
       //  let rgb = this.palette[p].split(",");
       // ctx.strokeStyle = `rgba(${parseInt(rgb[0].split(")")[0])},${parseInt(rgb[1].split(")")[0])},${parseInt(rgb[2].split(")")[0])},${parseFloat(rgb[3].split(")")[0])}`;
       //设置线条的宽度
@@ -431,9 +440,18 @@ export default {
       //记录坐标位置
       // this.$input.value = this.points.join(",");
       this.$forceUpdate();
+    },
+    delOthers(index){
+      //删除区域时要删除对应配置项
+      this.lines.splice(index,1);
+      this.visibles.splice(index,1);
+      this.palette.splice(index,1);
     }
   },
   watch: {
+    index(val){
+      console.log(val)
+    },
     lineWidth(val) {
       // this.palette[this.active].lineWidth = val;
       this.lines[this.active] = val;
@@ -448,18 +466,25 @@ export default {
       if (newVal != oldVal) this.draw();
     },
     points: {
-      handler(points) {
-        // if (points.length) {
-        //   if (points[this.active].length) {
-            this.draw();
-            //区域变化时数据更新
-            let index = this.active;
-            let [...arr] = this.points[index];
-            if (this.data.zones.length) {
-              this.data.zones[index].points = arr;
-            }
+      handler(points, old) {
+        // if (points.length != old.length) {
+        //   this.palette = [];
+        //   this.lines = [];
+        //   this.visible = [];
+        //   for (let i = 0; i < this.data.zones.length; i++) {
+        //     this.palette.push(this.data.zones[i].line_color);
+        //     this.lines.push(this.data.zones[i].line_width);
+        //     this.visible.push(this.data.zones[i].visible);
         //   }
         // }
+
+        this.draw();
+        //区域变化时数据更新
+        let index = this.active;
+        let [...arr] = this.points[index];
+        if (this.data.zones.length) {
+          this.data.zones[index].points = arr;
+        }
       },
       deep: true
     },
@@ -479,7 +504,7 @@ export default {
 .capture_box {
   height: calc(100vh - 35px - 50px);
   overflow-y: auto;
-  background:#283847;
+  background: #283847;
 }
 .capture_box img {
   width: 100%;
