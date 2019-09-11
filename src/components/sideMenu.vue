@@ -255,12 +255,13 @@ export default {
   width: 50px;
   text-align: center;
   height: 65px;
+    border-bottom-right-radius: 8px;
 }
 .nvr_card:hover {
   color: #eee;
 }
 .camera_box {
-  background: #071826;
+  background: #4D6E87;
   height: calc(100vh - 35px - 42px);
   overflow-y: auto;
 }
@@ -274,7 +275,7 @@ export default {
 }
 .camera_box li:hover,
 .camera_box li.current {
-  background: #4d6e87;
+  background: #071826;
 }
 .ivu-checkbox {
   margin-right: 10px;
@@ -286,7 +287,7 @@ export default {
   line-height: 42px;
   text-align: center;
   color: #fff;
-  background: #7490a7;
+  background: #071826;
 }
 .add_btn:hover {
   color: #fff;

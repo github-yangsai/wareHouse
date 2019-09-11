@@ -173,7 +173,7 @@ export default {
       showCameraFlag: false,
       cameraInfo: {},
       num: 1,
-      selectedArea: 0,
+      selectedArea:0,
       loading: false,
       areaData: {},
       showLineFlag: false,
@@ -249,11 +249,6 @@ export default {
       }
     },
     updateColor(val) {
-      // this.$set(
-      //   this.areaList[index],
-      //   "line_color",
-      //   this.areaList[index].line_color
-      // );
       this.lineColor = val;
     },
     updateCameraInfo(obj) {
@@ -1086,6 +1081,8 @@ export default {
       } else {
         this.cameraInfo = data;
       }
+      //设置区域默认值
+      this.selectedArea = 0;
     },
     deepCompare(x, y) {
       var i, l, leftChain, rightChain;
@@ -1230,18 +1227,12 @@ export default {
         .queryCamera(id)
         .then(res => {
           if (res && res.data) {
-            //将颜色转换成rgba
-            //  let zones = res.data.zones;
-            //   if(zones && zones.length){
-            //     for(let i = 0; i < zones.length;i++){
-            //        res.data.zones[i].line_color = this.dealColor(zones[i].line_red,zones[i].line_green,zones[i].line_blue,zones[i].line_alpha)
-            //     }
-            //   }
-
             this.cameraInfo = res.data;
             for (let i = 0; i < this.areaList.length; i++) {
               this.areaList[i].showAreaInput = false;
-              // this.areaList[i].line_color = "rgba(255,0,0,1)";
+            }
+            if(this.areaList.length){
+              this.strokeVal = this.areaList[0].line_width;
             }
             this.$store.commit("changeAreaFlag", true);
             if (id) {
@@ -1324,14 +1315,18 @@ export default {
       let areaItem = {
         name: "仓库A" + num + "区域",
         points: [],
-        line_color: "rgba(255,0,0,1)"
+        line_color: "rgba(255,0,0,1)",
+        line_width:1
       };
+      if(!this.cameraInfo.zones){
+        this.cameraInfo.zones = [];
+      }
       this.cameraInfo.zones.push(areaItem);
       this.num++;
       this.selectedArea = this.areaList.length - 1;
+      this.$refs.drawAreaBox.init();
       this.$refs.drawAreaBox.resize();
       this.$refs.drawAreaBox.add();
-      // document.getElementsByTagName("body")[0].style.cursor = "crosshair"
     },
     editArea(i) {
       //画线展示

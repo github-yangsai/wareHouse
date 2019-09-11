@@ -13,7 +13,7 @@
             id="canvas"
             @mousedown="mousedown"
             @mouseup="stopdrag"
-            @contextmenu.stop.prevent="rightClick"
+            @contextmenu.prevent="rightClick"
           ></canvas>
         </div>
       </div>
@@ -65,10 +65,10 @@ export default {
       enabled: "*",
       // palette: ["#FF0000", "#FFFF00", "#0000FF", "#008000", "#C0C0C0"],
       // palette:[{color:"#FF0000",alpha:1,lineWidth:1},{color:"#FFFF00",alpha:1,lineWidth:4},{color:"#0000FF",alpha:1,lineWidth:8},{color:"#008000",alpha:1,lineWidth:1}],
-      palette:[],
+      palette:["rgba(255,0,0,1)"],
       active: 0,
       loading: false,
-      lines: []
+      lines: [1]
     };
   },
   created() {},
@@ -105,13 +105,14 @@ export default {
         let zones = this.data.zones;
         this.points = [];
         this.lines = [];
+        this.palette = [];
         for (let i = 0; i < zones.length; i++) {
           if (zones[i].points && zones[i].points.length) {
             this.points.push(zones[i].points);
 
             //颜色笔触、线宽
-            let color = this.colorRGB2Hex(zones[i].line_color);
             this.palette.push(zones[i].line_color);
+            // let color = this.colorRGB2Hex(zones[i].line_color);
             // this.palette.push(this.colorRGB2Hex(zones[i].line_color));
             this.lines.push(zones[i].line_width);
           }
@@ -154,7 +155,6 @@ export default {
     },
     resize() {
       if (this.image.offsetWidth) {
-        console.log(11);
         this.$canvas.width = this.image.offsetWidth;
         this.$canvas.height = this.image.offsetHeight;
         this.loading = false;
@@ -177,7 +177,7 @@ export default {
           }
           //线宽比例计算
           for(let i = 0; i < this.lines.length;i++){
-            this.lines[i] = parseInt((this.lines[i] / this.data.width) * imgWidth);
+            this.lines[i] = Math.ceil((this.lines[i] / this.data.width) * imgWidth);
           }
         }
       }
@@ -385,16 +385,16 @@ export default {
       //       return s[m.floor(m.random() * s.length)] + (c && lol(m, s, c - 1));
       //     })(Math, "0123456789ABCDEF", 4);
       // }
+      if (!this.palette[p]) {
+        this.palette[p] =
+          "rgba(255,0,0,1)"
+      }
       //得到需要填充的颜色
       // var fillColor = this.hexToRgb(this.palette[p]);
       // //设置需要填充的颜色
-      debugger
-      let rgb;
-      rgb = this.palette[p].split(",");
+      let rgb = this.palette[p].split(",");
       rgb[3] = "0.3)";
-      console.log(rgb)
       ctx.fillStyle = rgb.join();
-      // ctx.fillStyle = `rgba(${parseInt(rgb[0].split(")")[0])},${parseInt(rgb[1].split(")")[0])},${parseInt(rgb[2].split(")")[0])},0.3}`;
       //填充当前路径
       ctx.fill();
       //绘制已存在的路径
