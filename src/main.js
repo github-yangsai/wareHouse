@@ -11,7 +11,8 @@ import 'iview/dist/styles/iview.css'
 import '../static/css/common.css'
 
 Vue.use(iView);
-Vue.use(axios);
+// Vue.use(axios);
+Vue.prototype.$axios = axios; // 将api挂载到vue的原型上
 
 Vue.config.productionTip = false
 Vue.prototype.$api = api; // 将api挂载到vue的原型上

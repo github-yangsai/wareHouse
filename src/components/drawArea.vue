@@ -24,7 +24,7 @@
 export default {
   name: "drawArea",
   components: {},
-  props: ["data", "notSave", "lineWidth","lineColor","index"],
+  props: ["data", "notSave", "lineWidth", "lineColor", "index"],
   data() {
     return {
       points: [
@@ -65,7 +65,7 @@ export default {
       enabled: "*",
       // palette: ["#FF0000", "#FFFF00", "#0000FF", "#008000", "#C0C0C0"],
       // palette:[{color:"#FF0000",alpha:1,lineWidth:1},{color:"#FFFF00",alpha:1,lineWidth:4},{color:"#0000FF",alpha:1,lineWidth:8},{color:"#008000",alpha:1,lineWidth:1}],
-      palette:["rgba(255,0,0,1)"],
+      palette: ["rgba(255,0,0,1)"],
       active: 0,
       loading: false,
       lines: [1]
@@ -99,7 +99,7 @@ export default {
       this.$canvas = document.getElementById("canvas");
       this.ctx = document.getElementById("canvas").getContext("2d");
       this.image = document.getElementById("image_container");
-     
+
       if (this.areaFlag) {
         //新增与编辑区域
         let zones = this.data.zones;
@@ -107,7 +107,7 @@ export default {
         this.lines = [];
         this.palette = [];
         for (let i = 0; i < zones.length; i++) {
-          if (zones[i].points && zones[i].points.length) {
+          if (zones[i].points) {
             this.points.push(zones[i].points);
 
             //颜色笔触、线宽
@@ -134,7 +134,7 @@ export default {
     add() {
       // 新增区域
       this.enabled = true;
-      this.points.push([]);
+      // this.points.push([]);
       this.active = this.points.length - 1;
     },
     removePolygon(index) {
@@ -153,7 +153,7 @@ export default {
       this.points = [];
       this.draw();
     },
-    resize() {
+    resize(flag) {
       if (this.image.offsetWidth) {
         this.$canvas.width = this.image.offsetWidth;
         this.$canvas.height = this.image.offsetHeight;
@@ -162,7 +162,7 @@ export default {
         let imgHeight = this.image.offsetHeight;
 
         //如果后台返回的宽度和当前用户图片容器的宽度不一样，则按比例缩放点的坐标
-        if (this.data.width && this.data.width != imgWidth) {
+        if (this.data.width && (this.data.width != imgWidth || this.data.height != imgHeight) && !flag) {
           for (let i = 0; i < this.points.length; i++) {
             for (let j = 0; j < this.points[i].length; j++) {
               let pointX = this.points[i][j][0];
@@ -176,8 +176,10 @@ export default {
             }
           }
           //线宽比例计算
-          for(let i = 0; i < this.lines.length;i++){
-            this.lines[i] = Math.ceil((this.lines[i] / this.data.width) * imgWidth);
+          for (let i = 0; i < this.lines.length; i++) {
+            this.lines[i] = Math.ceil(
+              (this.lines[i] / this.data.width) * imgWidth
+            );
           }
         }
       }
@@ -350,6 +352,9 @@ export default {
       }
     },
     drawSingle(points, p) {
+      if(!points.length){
+        return false;
+      }
       let ctx = this.$canvas.getContext("2d");
       //设置绘制的图像在源图像之上
       ctx.globalCompositeOperation = "destination-over";
@@ -386,8 +391,7 @@ export default {
       //     })(Math, "0123456789ABCDEF", 4);
       // }
       if (!this.palette[p]) {
-        this.palette[p] =
-          "rgba(255,0,0,1)"
+        this.palette[p] = "rgba(255,0,0,1)";
       }
       //得到需要填充的颜色
       // var fillColor = this.hexToRgb(this.palette[p]);
@@ -442,20 +446,24 @@ export default {
       if (newVal != oldVal) this.draw();
     },
     points: {
-      handler(val) {
-        this.draw();
-        //区域变化时数据更新
-        let index = this.active;
-        let [...arr] = this.points[index];
-        if (this.data.zones.length) {
-          this.data.zones[index].points = arr;
-        }
+      handler(points) {
+        // if (points.length) {
+        //   if (points[this.active].length) {
+            this.draw();
+            //区域变化时数据更新
+            let index = this.active;
+            let [...arr] = this.points[index];
+            if (this.data.zones.length) {
+              this.data.zones[index].points = arr;
+            }
+        //   }
+        // }
       },
       deep: true
     },
-    lineColor:{
-       handler(val) {
-         this.palette[this.index] = val;
+    lineColor: {
+      handler(val) {
+        this.palette[this.index] = val;
         // this.palette[this.index] = this.colorRGB2Hex(val);
         this.draw();
       },
@@ -469,6 +477,7 @@ export default {
 .capture_box {
   height: calc(100vh - 35px - 50px);
   overflow-y: auto;
+  background:#283847;
 }
 .capture_box img {
   width: 100%;

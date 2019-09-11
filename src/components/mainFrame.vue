@@ -78,7 +78,7 @@
             ref="sideMenu"
           ></side-menu>
         </Sider>
-        <Content>
+        <Content style="background:#283847">
           <draw-area
             :data="cameraInfo"
             :lineWidth="strokeVal"
@@ -190,7 +190,9 @@ export default {
       // })
     },
     selectedArea(val) {
-      this.strokeVal = this.areaList[val].line_width;
+      if(this.areaList.length){
+        this.strokeVal = this.areaList[val].line_width;
+      }
     },
     cameraInfo: {
       handler(newVal, oldVal) {
@@ -251,7 +253,7 @@ export default {
     updateColor(val) {
       this.lineColor = val;
     },
-    updateCameraInfo(obj) {
+    updateCameraInfo(obj,source) {
       //区域信息更新到摄像头信息
       if (obj) {
         for (let key in obj) {
@@ -259,6 +261,9 @@ export default {
         }
       } else {
         this.cameraInfo = {};
+      }
+      if(source){
+         this.showCameraFlag = false;
       }
     },
     clickCapture() {
@@ -1066,7 +1071,6 @@ export default {
         }
       ];
       this.$api.wareHouse.queryNvr().then(res => {
-        console.log(res)
         if (res.data.results) {
           this.nvrList = res.data.results;
         }
@@ -1201,6 +1205,11 @@ export default {
 
       return true;
     },
+    compareObj(data,resultData){
+      for(let key in resultData){
+        // resultData[key]
+      }
+    },
     cancelSave() {
       this.$Modal.confirm({
         title: "提示",
@@ -1208,6 +1217,7 @@ export default {
         onOk: () => {
           if (this.cameraInfo.id) {
             //取消修改
+
           } else {
             //取消新增
             this.showCameraFlag = false;
@@ -1228,6 +1238,7 @@ export default {
         .then(res => {
           if (res && res.data) {
             this.cameraInfo = res.data;
+            console.log(res.data)
             for (let i = 0; i < this.areaList.length; i++) {
               this.areaList[i].showAreaInput = false;
             }
@@ -1313,10 +1324,11 @@ export default {
       //新增区域
       let num = this.num;
       let areaItem = {
-        name: "仓库A" + num + "区域",
+        name: "区域" + num,
         points: [],
         line_color: "rgba(255,0,0,1)",
-        line_width:1
+        line_width:1,
+        showAreaInput:true
       };
       if(!this.cameraInfo.zones){
         this.cameraInfo.zones = [];
@@ -1325,7 +1337,7 @@ export default {
       this.num++;
       this.selectedArea = this.areaList.length - 1;
       this.$refs.drawAreaBox.init();
-      this.$refs.drawAreaBox.resize();
+      this.$refs.drawAreaBox.resize(1);
       this.$refs.drawAreaBox.add();
     },
     editArea(i) {
@@ -1720,5 +1732,8 @@ fieldset[disabled] .ivu-btn-primary:hover {
 .add_btn:hover {
   color: #fff;
   background: #142e44;
+}
+.ivu-spin-fix{
+  background-color:rgba(255,255,255,.1);
 }
 </style>

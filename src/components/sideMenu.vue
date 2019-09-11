@@ -170,7 +170,9 @@ export default {
       this.selectedCamera = "";
       this.selectedNvr = i;
       this.cameraList = this.nvrList[i].cameras;
-      this.$emit("updateCameraInfo");
+      this.$emit("updateCameraInfo",0,"tabNvr");
+
+      // changeShowCameraFlag
     }
   }
 };
@@ -194,7 +196,7 @@ export default {
   text-align: center;
   position: relative;
   margin-bottom: 5px;
-  height: 60px;
+  height: 70px;
   transition: 0.5s;
 }
 .nvr_tab li:hover span {
@@ -204,21 +206,23 @@ export default {
   width: auto;
   min-width: 50px;
 }
+
+.nvr_tab li span,
+.nvr_card {
+  display: block;
+  padding: 10px 5px;
+  height:50px;
+  color: #fff;
+  border-top-right-radius: 8px;
+  background: #4d6e87;
+  cursor: pointer;
+}
 .nvr_tab li span {
   text-overflow: ellipsis;
   white-space: nowrap;
   transition: width 0.3s;
   width: 50px;
-}
-.nvr_tab li span,
-.nvr_card {
-  display: block;
-  padding: 10px 5px;
-  height: 40px;
-  color: #fff;
-  border-top-right-radius: 8px;
-  background: #4d6e87;
-  cursor: pointer;
+  padding: 15px 5px;
 }
 /* .nvr_tab li span:hover, */
 .nvr_tab li.current span {
