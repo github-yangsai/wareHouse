@@ -47,6 +47,9 @@ const wareHouse = {
     //新增摄像头时端口和通道默认值
     cameraSuggest(id) {
         return axios.get(`${base.camera_suggest}/${id}/suggest/`);
+    },
+    restartServer() {
+        return axios.post(`${base.restart}/`);
     }
 
 

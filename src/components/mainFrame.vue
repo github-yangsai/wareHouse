@@ -1,5 +1,17 @@
 <template>
   <div>
+    <div class="countdown_tips" v-if="countDownFlag">
+      <i-circle
+        :percent="countdownPercent"
+        stroke-color="#2db7f5"
+        :size="200"
+        :stroke-width="8"
+        :trail-width="8"
+      >
+        <!-- <Icon v-if="percent == 100" type="ios-checkmark" size="60" style="color:#5cb85c"></Icon> -->
+        <span style="font-size:40px" class="text">{{ seconds }}s</span>
+      </i-circle>
+    </div>
     <Spin size="large" fix v-if="loading">
       <!-- <Icon type="ios-loading" size="18" class="demo-spin-icon-load"></Icon>
       <div>加载中...</div>-->
@@ -218,15 +230,35 @@ export default {
       screenWidth: 0,
       lineColor: null,
       changeFlag: false,
-      settings: {}
+      settings: {},
+      seconds: 30,
+      countDownFlag: false,
+      countdownPercent: 100,
+      timer1: null
     };
   },
   watch: {
-    screenWidth(val) {
-      console.log(val);
-      // this.$nextTick(()=>{
-      //    this.$refs.drawAreaBox.draw();
-      // })
+    countDownFlag(val) {
+      let _this = this;
+      if (val) {
+        this.timer1 = setInterval(() => {
+          if (_this.seconds < 0) {
+            return false;
+          }
+          _this.seconds--;
+        }, 1000);
+      } else {
+        this.seconds = 30;
+      }
+    },
+    seconds(val) {
+      if (val < 0) {
+        clearInterval(this.timer1);
+        this.countDownFlag = false;
+        this.countdownPercent = 100;
+      } else {
+        this.countdownPercent -= 100 / 30;
+      }
     },
     selectedArea(val) {
       if (this.areaList.length) {
@@ -1168,7 +1200,7 @@ export default {
             this.loading = false;
             this.$Message.error(e);
           });
-        // 
+        //
       }
       //设置区域默认值
       this.selectedArea = 0;
@@ -1394,8 +1426,24 @@ export default {
       //新增或修改摄像头信息和区域
       this.$refs.drawAreaBox.updateWidth();
       let data = this.cameraInfo;
+      if (!this.cameraInfo.no) {
+        this.$Message.info("编号不能为空");
+        return false;
+      }
+      if (!this.cameraInfo.name) {
+        this.$Message.info("摄像头名称不能为空");
+        return false;
+      }
+      if (!this.cameraInfo.rtsp_url) {
+        this.$Message.info("视频地址不能为空");
+        return false;
+      }
       if (!this.cameraInfo.nvr_channel) {
-        this.$Message.info("通道数不能为空");
+        this.$Message.info("输出通道号不能为空");
+        return false;
+      }
+      if (!this.cameraInfo.output_port) {
+        this.$Message.info("输出端口不能为空");
         return false;
       }
       this.loading = true;
@@ -1428,6 +1476,7 @@ export default {
             this.loading = false;
             this.$Message.success("保存成功");
             this.queryAllData();
+            this.changeFlag = false;
           })
           .catch(e => {
             this.loading = false;
@@ -1445,10 +1494,7 @@ export default {
             this.$Message.success("新增成功");
             let _this = this;
             this.queryAllData();
-            // _this.$refs.sideMenu.updateCameraList();
-            // this.queryAllData().then(()=>{
-            //   _this.$refs.sideMenu.updateCameraList();
-            // });
+            this.changeFlag = false;
           })
           .catch(e => {
             this.loading = false;
@@ -1539,11 +1585,16 @@ export default {
       });
     },
     setOption(name) {
+      // let _this = this;
       if (name == "restartServer") {
         this.$Modal.confirm({
           title: "提示",
           content: "确定重启服务器？",
-          onOk: () => {},
+          onOk: () => {
+            this.$api.wareHouse.restartServer().then(res => {
+              this.countDownFlag = true;
+            });
+          },
           onCancel: () => {}
         });
       } else if (name == "exportTable") {
@@ -1875,5 +1926,34 @@ fieldset[disabled] .ivu-btn-primary:hover {
 }
 .ivu-spin-fix {
   background-color: rgba(255, 255, 255, 0.1);
+}
+.countdown_tips {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  z-index:20;
+}
+.countdown_tips::before {
+  display: block;
+  content: "";
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  opacity: 0.7;
+  left: 0;
+  top: 0;
+}
+.countdown_tips .ivu-chart-circle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -100px;
+  margin-top: -100px;
+}
+.countdown_tips .ivu-chart-circle .text {
+  color: #2db7f5;
 }
 </style>
