@@ -50,6 +50,9 @@ const wareHouse = {
     },
     restartServer() {
         return axios.post(`${base.restart}/`);
+    },
+    nvrConfig(){
+        return axios.get(`${base.nvr_config}/?format=csv`);
     }
 
 

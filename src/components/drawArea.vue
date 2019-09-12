@@ -62,15 +62,15 @@ export default {
       $canvas: null,
       ctx: null,
       image: null,
-      enabled: "*",
+      enabled: false,
       // palette: ["#FF0000", "#FFFF00", "#0000FF", "#008000", "#C0C0C0"],
       // palette:[{color:"#FF0000",alpha:1,lineWidth:1},{color:"#FFFF00",alpha:1,lineWidth:4},{color:"#0000FF",alpha:1,lineWidth:8},{color:"#008000",alpha:1,lineWidth:1}],
       palette: ["rgba(255,0,0,1)"],
       visibles: [true],
-      active: 0,
+      active: -1,
       loading: false,
       lines: [1],
-      pointParams:{}
+      pointParams: {}
     };
   },
   created() {},
@@ -79,8 +79,8 @@ export default {
     this.ctx = document.getElementById("canvas").getContext("2d");
     this.image = document.getElementById("image_container");
     this.$canvas.onclick = () => {
-      this.$emit("updateChange",true);
-    }
+      this.$emit("updateChange", true);
+    };
   },
   computed: {
     areaFlag() {
@@ -125,7 +125,7 @@ export default {
           }
         }
         this.image.firstChild.onload = this.resize;
-        if(flag){
+        if (flag) {
           this.resize();
         }
       }
@@ -138,6 +138,9 @@ export default {
       this.points = [];
     },
     undo() {
+      if(this.active == -1){
+        return false;
+      }
       this.points[this.active].splice(-1, 1);
     },
     add() {
@@ -155,7 +158,7 @@ export default {
       if (this.points.length == 0) {
         this.enabled = false;
       } else {
-        this.active = 0;
+        this.active = -1;
       }
     },
     reset() {
@@ -350,7 +353,7 @@ export default {
       let ctx = this.$canvas.getContext("2d");
       let points = this.points;
       ctx.canvas.width = ctx.canvas.width;
-      if (points.length > 0) {
+      if (points.length > 0 && this.active >= 0) {
         this.drawSingle(points[this.active], this.active);
       }
       for (var p = 0; p < points.length; ++p) {
@@ -447,20 +450,24 @@ export default {
       // this.$input.value = this.points.join(",");
       this.$forceUpdate();
     },
-    delOthers(index){
+    delOthers(index) {
       //删除区域时要删除对应配置项
-      this.lines.splice(index,1);
-      this.visibles.splice(index,1);
-      this.palette.splice(index,1);
+      this.lines.splice(index, 1);
+      this.visibles.splice(index, 1);
+      this.palette.splice(index, 1);
     }
   },
   watch: {
-    index(val){
-      console.log(val)
+    index(val) {
+      this.active = val;
+      if(val != -1 ){
+        this.enabled = true;
+      }
     },
     lineWidth(val) {
-      // this.palette[this.active].lineWidth = val;
-      this.lines[this.active] = val;
+      if(this.active != -1){
+        this.lines[this.active] = val;
+      }
       this.draw();
     },
     areaFlag(val) {
@@ -483,12 +490,15 @@ export default {
         //     this.visible.push(this.data.zones[i].visible);
         //   }
         // }
-
-        this.draw();
+        
         //区域变化时数据更新
         let index = this.active;
-        if(index >= points.length){
-          index = points.length-1;
+        if (index == -1) {
+          return false;
+        }
+        this.draw();
+        if (index >= points.length) {
+          index = points.length - 1;
         }
         let [...arr] = this.points[index];
         if (this.data.zones.length) {
@@ -553,5 +563,4 @@ export default {
   height: 100%;
   width: 100%;
 }
-
 </style>

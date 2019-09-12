@@ -41,7 +41,13 @@
             v-if="showCameraFlag && this.cameraInfo.img_url && cameraInfo.img_url!='http://'"
           >
             <span class="field_name">描边：</span>
-            <InputNumber :max="10" :min="1" v-model="strokeVal" @on-change="changeLinewidth"></InputNumber>
+            <InputNumber
+              :max="10"
+              :min="1"
+              v-model="strokeVal"
+              @on-change="changeLinewidth"
+              :disabled="selectedArea==-1"
+            ></InputNumber>
             <!-- <Input v-model="strokeVal" type="number"></Input> -->
             <!-- <Select v-model="line_width" size="small" style="width:76px;">
               <Option
@@ -222,7 +228,7 @@ export default {
       showCameraFlag: false,
       cameraInfo: {},
       num: 1,
-      selectedArea: 0,
+      selectedArea: -1,
       loading: false,
       areaData: {},
       showLineFlag: false,
@@ -261,7 +267,7 @@ export default {
       }
     },
     selectedArea(val) {
-      if (this.areaList.length) {
+      if (this.areaList.length && val != -1) {
         this.strokeVal = this.areaList[val].line_width;
       }
     },
@@ -330,6 +336,22 @@ export default {
     };
   },
   methods: {
+    tranferDate(val) {
+      if (val) {
+        let date = new Date(val);
+        let year = date.getFullYear();
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
+        let hour = date.getHours();
+        let min = date.getMinutes();
+        let second = date.getSeconds();
+        return `${year}${month < 10 ? "0" + month : month}${
+          day < 10 ? "0" + day : day
+        }${hour < 10 ? "0" + hour : hour}${min < 10 ? "0" + min : min}${
+          second < 10 ? "0" + second : second
+        }`;
+      }
+    },
     updateChange(val) {
       this.changeFlag = val;
     },
@@ -1203,7 +1225,7 @@ export default {
         //
       }
       //设置区域默认值
-      this.selectedArea = 0;
+      this.selectedArea = -1;
     },
     deepCompare(x, y) {
       var i, l, leftChain, rightChain;
@@ -1327,6 +1349,7 @@ export default {
       for (let key in resultData) {
         if (key != "zones" && key != "nvr") {
           if (resultData[key] != data[key]) {
+            console.log("key:", key);
             flag = false;
             return flag;
           }
@@ -1357,14 +1380,7 @@ export default {
       // }
       return flag;
     },
-    cancelSave(flag) {
-      // let content;
-      // if(flag){
-      //   content = "数据未保存，确认取消吗？";
-      // }else{
-      //   content = "数据未保存，确认离开吗？";
-      // }
-
+    cancelSave() {
       this.$Modal.confirm({
         title: "提示",
         content: "数据未保存，确认取消吗？",
@@ -1467,6 +1483,7 @@ export default {
           .reviewCamera(this.cameraInfo.id, data)
           .then(res => {
             if (res && res.data) {
+              this.resultData = JSON.parse(JSON.stringify(res.data));
               this.cameraInfo = res.data;
               let zones = this.cameraInfo.zones;
               for (let i = 0; i < zones.length; i++) {
@@ -1486,8 +1503,8 @@ export default {
         this.$api.wareHouse
           .addCamera(data)
           .then(res => {
-            console.log(res);
             if (res && res.data) {
+              this.resultData = JSON.parse(JSON.stringify(res.data));
               this.cameraInfo = res.data;
             }
             this.loading = false;
@@ -1577,6 +1594,9 @@ export default {
           "】,删除后不可恢复，确认要删除吗",
         onOk: () => {
           _this.cameraInfo.zones.splice(index, 1);
+          if (_this.cameraInfo.zones.length <= 0) {
+            this.selectedArea = -1;
+          }
           _this.$refs.drawAreaBox.delOthers(index);
           _this.$refs.drawAreaBox.removePolygon(index);
           _this.$Message.success("删除成功");
@@ -1599,6 +1619,28 @@ export default {
         });
       } else if (name == "exportTable") {
         //导出配置表
+        this.$api.wareHouse.nvrConfig().then(res => {
+          console.log(res.data);
+          const content = res.data;
+          const blob = new Blob([content]);
+          let times = new Date().getTime();
+          let currentDate = this.tranferDate(times);
+          const fileName = currentDate + "配置表.csv";
+          if ("download" in document.createElement("a")) {
+            // 非IE下载
+            const elink = document.createElement("a");
+            elink.download = fileName;
+            elink.style.display = "none";
+            elink.href = URL.createObjectURL(blob);
+            document.body.appendChild(elink);
+            elink.click();
+            URL.revokeObjectURL(elink.href); // 释放URL 对象
+            document.body.removeChild(elink);
+          } else {
+            //IE10+下载
+            navigator.msSaveBlob(blob, fileName);
+          }
+        });
       }
     }
   }
@@ -1933,7 +1975,7 @@ fieldset[disabled] .ivu-btn-primary:hover {
   height: 100%;
   left: 0;
   top: 0;
-  z-index:20;
+  z-index: 20;
 }
 .countdown_tips::before {
   display: block;
