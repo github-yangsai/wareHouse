@@ -69,7 +69,8 @@ export default {
       visibles: [true],
       active: 0,
       loading: false,
-      lines: [1]
+      lines: [1],
+      pointParams:{}
     };
   },
   created() {},
@@ -77,6 +78,9 @@ export default {
     this.$canvas = document.getElementById("canvas");
     this.ctx = document.getElementById("canvas").getContext("2d");
     this.image = document.getElementById("image_container");
+    this.$canvas.onclick = () => {
+      this.$emit("updateChange",true);
+    }
   },
   computed: {
     areaFlag() {
@@ -96,11 +100,11 @@ export default {
         height: this.image.offsetHeight
       });
     },
-    init() {
+    init(flag) {
       this.$canvas = document.getElementById("canvas");
       this.ctx = document.getElementById("canvas").getContext("2d");
       this.image = document.getElementById("image_container");
-
+      // debugger
       if (this.areaFlag) {
         //新增与编辑区域
         let zones = this.data.zones;
@@ -121,7 +125,9 @@ export default {
           }
         }
         this.image.firstChild.onload = this.resize;
-        // this.resize();
+        if(flag){
+          this.resize();
+        }
       }
     },
     changeActive(index) {
@@ -356,7 +362,7 @@ export default {
       }
     },
     drawSingle(points, p) {
-      if (!points.length || !this.visibles[p]) {
+      if (!points || !points.length || !this.visibles[p]) {
         return false;
       }
       let ctx = this.$canvas.getContext("2d");
@@ -481,6 +487,9 @@ export default {
         this.draw();
         //区域变化时数据更新
         let index = this.active;
+        if(index >= points.length){
+          index = points.length-1;
+        }
         let [...arr] = this.points[index];
         if (this.data.zones.length) {
           this.data.zones[index].points = arr;

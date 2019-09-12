@@ -7,7 +7,10 @@
     nvr: `${domain}/warehouse/nvr`,
     cameras:`${domain}/warehouse/cameras`,
     camera:`${domain}/warehouse/camera`,
-    capture:`${domain}/warehouse/capture`
+    capture:`${domain}/warehouse/capture`,
+    restart:`${domain}/warehouse/restart/`,
+    nvr_config:`${domain}/warehouse/nvr_config/`,
+    camera_suggest:`${domain}/warehouse/nvr`
 }
 
 export default base;

@@ -62,14 +62,13 @@ export default {
     editNVR,
     cameraInfo
   },
-  props: ["nvrList"],
+  props: ["nvrList", "isChanged"],
   data() {
     return {
       allNvrData: {},
       cameraList: [],
       selectedCamera: "",
       selectedNvr: "",
-      selectedCameraIdx: "",
       nvrFlag: false,
       itemNvr: {},
       cameraFlag: false,
@@ -103,6 +102,7 @@ export default {
   },
   methods: {
     delCamera(id) {
+      debugger;
       this.cameraList.splice(this.selectedCamera, 1);
     },
     queryAllData() {
@@ -137,42 +137,101 @@ export default {
       this.cameraFlag = false;
     },
     addCamera() {
-      //新增摄像头
-      let defaultCamera = {
-        name: "新增摄像头",
-        nvr: {
-          id: this.nvrList[this.selectedNvr].id
-        },
-        zones: []
-      };
-      this.cameraList.push(defaultCamera);
-      this.defaultCamera = defaultCamera;
-      this.selectedCamera = this.cameraList.length
-        ? this.cameraList.length - 1
-        : 0;
-      this.$emit("clickedCamera", false, defaultCamera);
+      // //新增摄像头
+      if (this.isChanged) {
+        this.$Modal.confirm({
+          title: "提示",
+          content: "您有未保存的修改，确认离开吗？",
+          onOk: () => {
+            //确认离开
+            let defaultCamera = {
+              name: "",
+              nvr: {
+                id: this.nvrList[this.selectedNvr].id
+              },
+              zones: []
+            };
+            this.cameraList.push(defaultCamera);
+            this.defaultCamera = defaultCamera;
+            this.selectedCamera = this.cameraList.length
+              ? this.cameraList.length - 1
+              : 0;
+            this.$emit("clickedCamera", false, defaultCamera);
+          },
+          onCancel: () => {
+            //取消离开
+          }
+        });
+      } else {
+        let defaultCamera = {
+          name: "",
+          nvr: {
+            id: this.nvrList[this.selectedNvr].id
+          },
+          zones: []
+        };
+        this.cameraList.push(defaultCamera);
+        this.defaultCamera = defaultCamera;
+        this.selectedCamera = this.cameraList.length
+          ? this.cameraList.length - 1
+          : 0;
+        this.$emit("clickedCamera", false, defaultCamera);
+      }
     },
     updateCameraList() {
       this.cameraList = this.nvrList[this.selectedNvr].cameras;
     },
     editCamera(event, i) {
-      this.selectedCameraIdx = i;
       let target = event.target;
       if (event.target.localName == "li") {
-        this.selectedCamera = i;
-        this.$emit("clickedCamera", true, this.cameraList[i]);
+        if (this.isChanged) {
+          this.$Modal.confirm({
+            title: "提示",
+            content: "您有未保存的修改，确认离开吗？",
+            onOk: () => {
+              //确认离开
+              if (!this.cameraList[this.selectedCamera].id) {
+                this.delCamera();
+              }
+              this.selectedCamera = i;
+              this.$emit("clickedCamera", true, this.cameraList[i]);
+            },
+            onCancel: () => {
+              //取消离开
+            }
+          });
+        } else {
+          this.selectedCamera = i;
+          this.$emit("clickedCamera", true, this.cameraList[i]);
+        }
       }
     },
     tabNvr(event, i) {
       //NVR tab切换
       event.preventDefault();
-      this.$store.commit("changeAreaFlag", false);
-      this.selectedCamera = "";
-      this.selectedNvr = i;
-      this.cameraList = this.nvrList[i].cameras;
-      this.$emit("updateCameraInfo",0,"tabNvr");
-
-      // changeShowCameraFlag
+      if (this.isChanged) {
+        this.$Modal.confirm({
+          title: "提示",
+          content: "您当前有未保存的修改，确认离开吗？",
+          onOk: () => {
+            //确认离开
+            this.$store.commit("changeAreaFlag", false);
+            this.selectedCamera = "";
+            this.selectedNvr = i;
+            this.queryAllData();
+            this.cameraList = this.nvrList[i].cameras;
+            this.$emit("updateCameraInfo", 0, "tabNvr");
+          },
+          onCancel: () => {
+            //取消离开
+          }
+        });
+      } else {
+        this.selectedCamera = "";
+        this.selectedNvr = i;
+        this.cameraList = this.nvrList[i].cameras;
+        this.$emit("updateCameraInfo", 0, "tabNvr");
+      }
     }
   }
 };
@@ -211,7 +270,7 @@ export default {
 .nvr_card {
   display: block;
   padding: 10px 5px;
-  height:50px;
+  height: 50px;
   color: #fff;
   border-top-right-radius: 8px;
   background: #4d6e87;
@@ -259,13 +318,13 @@ export default {
   width: 50px;
   text-align: center;
   height: 65px;
-    border-bottom-right-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 .nvr_card:hover {
   color: #eee;
 }
 .camera_box {
-  background: #4D6E87;
+  background: #4d6e87;
   height: calc(100vh - 35px - 42px);
   overflow-y: auto;
 }

@@ -42,6 +42,11 @@ const wareHouse = {
     //截屏
     capture(params) {
         return axios.post(`${base.capture}/`, params);
+    },
+
+    //新增摄像头时端口和通道默认值
+    cameraSuggest(id) {
+        return axios.get(`${base.camera_suggest}/${id}/suggest/`);
     }
 
 
