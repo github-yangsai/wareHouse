@@ -9,11 +9,15 @@ Vue.use(vuex);
 // };
 const Store = new vuex.Store({
   state:{
-    areaFlag:false
+    areaFlag:false,
+    loading:false
   },
   mutations:{
     changeAreaFlag(state,val){
       state.areaFlag = val;
+    },
+    changeLoading(state,val){
+      state.loading = val;
     }
   },
   actions:{

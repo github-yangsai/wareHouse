@@ -1,7 +1,6 @@
 <template>
   <div>
     <div>
-      <Spin size="large" fix v-if="loading"></Spin>
       <div class="capture_box">
         <!-- {{points}} -->
         <div class="img_box" id="image_container">
@@ -68,7 +67,6 @@ export default {
       palette: ["rgba(255,0,0,1)"],
       visibles: [true],
       active: -1,
-      loading: false,
       lines: [1],
       pointParams: {}
     };
@@ -101,6 +99,7 @@ export default {
       });
     },
     init(flag) {
+      this.$store.commit("changeLoading", true);
       this.$canvas = document.getElementById("canvas");
       this.ctx = document.getElementById("canvas").getContext("2d");
       this.image = document.getElementById("image_container");
@@ -124,6 +123,7 @@ export default {
         if (flag) {
           this.resize();
         }
+        this.$store.commit("changeLoading", false);
       }
     },
     changeActive(index) {
@@ -165,7 +165,7 @@ export default {
       if (this.image.offsetWidth) {
         this.$canvas.width = this.image.offsetWidth;
         this.$canvas.height = this.image.offsetHeight;
-        this.loading = false;
+        this.$store.commit("changeLoading", false);
         let imgWidth = this.image.offsetWidth;
         let imgHeight = this.image.offsetHeight;
 

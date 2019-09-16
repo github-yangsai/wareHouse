@@ -29,13 +29,26 @@
       </Col>
       <Col span="18" v-if="selectedNvr === 0 || selectedNvr">
         <div class="camera_box">
-          <ul>
+         
+          <ul style="position:absolute;display:block;width:100%;">
             <li
               v-for="(item,i) in cameraList"
               @click="editCamera($event,i)"
-              :class="{'current':selectedCamera === i}"
+              :class="{'menu_li':true,'current':selectedCamera === i}"
               :key="item.id"
-            >{{item.name}}</li>
+            >{{item.name}}
+            <div class="move_to" v-if="item.id">
+              <Icon type="ios-arrow-forward" />
+               <div class="move_list">
+                 <h4>移动到</h4>
+                  <ul>
+                    <li v-for="(item2,index2) in nvrList" :key="item2.id" @click="moveTonvr(i,item2)">
+                      {{item2.name}}
+                    </li>
+                  </ul>
+              </div>
+            </div>
+            </li>
           </ul>
         </div>
         <a href="javascript:void(0)" class="add_btn" @click="addCamera">新增摄像头</a>
@@ -101,6 +114,23 @@ export default {
     }
   },
   methods: {
+    moveTonvr(i,item){
+      //移动到分组
+      this.$Modal.confirm({
+        title: "提示",
+        content:
+          "请确认是否将摄像头【" + this.cameraList[i].name + "】移动至NVR【" + item.name + "】中?",
+        onOk: () => {
+          this.cameraList[i].nvr.id = item.id;
+          this.$api.wareHouse.reviewCamera(this.cameraList[i].id,this.cameraList[i]).then(res => {
+            this.cameraList.splice(i,1);
+            this.$Message.success("移动成功");
+            this.queryAllData();
+          });
+        },
+        onCancel: () => {}
+      });
+    },
     delCamera(id) {
       this.cameraList.splice(this.selectedCamera, 1);
     },
@@ -182,7 +212,7 @@ export default {
     },
     editCamera(event, i) {
       let target = event.target;
-      if (event.target.localName == "li") {
+      if (event.target.className.indexOf("menu_li") != -1) {
         if (this.isChanged) {
           this.$Modal.confirm({
             title: "提示",
@@ -244,6 +274,7 @@ export default {
   left: 0;
   top: 35px;
   bottom: 0;
+  z-index: 10;
 }
 .nvr_tab {
   width: 50px;
@@ -334,6 +365,7 @@ export default {
   border-bottom: 1px #142e44 solid;
   color: #fff;
   cursor: pointer;
+  position: relative;
 }
 .camera_box li:hover,
 .camera_box li.current {
@@ -354,5 +386,33 @@ export default {
 .add_btn:hover {
   color: #fff;
   background: #142e44;
+}
+.move_to{
+  position: absolute;
+  right:0;
+  width:24px;
+  top:-1px;
+}
+.move_to:hover .move_list{
+  display:block;
+}
+.move_list{
+  display:none;
+  position: absolute;
+  right:-140px;
+  top:1px;
+  width:140px;
+  background: #4d6e87;
+  border-left:1px #142e44 solid;
+  border-right:1px #142e44 solid;
+}
+.move_list li{
+  height:35px;
+  line-height: 35px;
+}
+.move_list h4{
+  padding-left:20px;
+  font-weight: normal;
+  background:#224463;
 }
 </style>

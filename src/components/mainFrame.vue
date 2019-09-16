@@ -128,13 +128,13 @@
           class="right_bar"
           v-if="showCameraFlag && this.cameraInfo.img_url && cameraInfo.img_url!='http://'"
         >
-          <div class="operate_bar">
+          <div class="operate_bar" v-if="areaList.length">
             <RadioGroup v-model="eyesAll" @on-change="setAllvisible">
               <Radio label="1">全部显示</Radio>
               <Radio label="0">全部隐藏</Radio>
             </RadioGroup>
           </div>
-          <div class="area_container">
+          <div class="area_container" :class="{'has_bar':areaList.length}">
             <ul>
               <li
                 v-for="(item,index) in areaList"
@@ -228,7 +228,6 @@ export default {
       cameraInfo: {},
       num: 1,
       selectedArea: -1,
-      loading: false,
       areaData: {},
       showLineFlag: false,
       resultData: {},
@@ -287,6 +286,9 @@ export default {
     }
   },
   computed: {
+    loading(){
+      return this.$store.state.loading;
+    },
     areaList() {
       return this.cameraInfo.zones ? this.cameraInfo.zones : [];
     },
@@ -413,7 +415,7 @@ export default {
         this.$Message.warning("请先输入rtsp地址才能截屏", 5);
         return false;
       }
-      this.loading = true;
+      this.$store.commit("changeLoading", true);
       let _this = this;
       let rtsp_url = this.cameraInfo.rtsp_url; //输入视频地址后才能截屏
       let data = new FormData();
@@ -428,7 +430,7 @@ export default {
             _this.$nextTick(() => {
               _this.$refs.drawAreaBox.resize();
             });
-            this.loading = false;
+            this.$store.commit("changeLoading", false);
             // let _image = new Image();
             // _image.src = "http://192.168.16.228:8888/" + img_url;
             // _image.onload = function() {
@@ -439,7 +441,7 @@ export default {
         })
         .catch(function(error) {
           _this.$Message.error(error);
-          _this.loading = false;
+          _this.$store.commit("changeLoading", false);
         });
     },
     queryAllData() {
@@ -1229,7 +1231,7 @@ export default {
       } else {
         this.changeFlag = true;
         //新增时查询默认端口和通道
-        this.loading = true;
+        this.$store.commit("changeLoading",true);
         this.$api.wareHouse
           .cameraSuggest(data.nvr.id)
           .then(res => {
@@ -1238,10 +1240,10 @@ export default {
               this.cameraInfo.nvr_channel = res.data.suggest_nvr_channel;
               this.cameraInfo.output_port = res.data.suggest_output_port;
             }
-            this.loading = false;
+            this.$store.commit("changeLoading",false);
           })
           .catch(e => {
-            this.loading = false;
+            this.$store.commit("changeLoading",false);
             this.$Message.error(e);
           });
         //
@@ -1424,7 +1426,7 @@ export default {
     queryCamera(id, flag) {
       //查询单个摄像头数据
       let _this = this;
-      this.loading = true;
+      this.$store.commit("changeLoading",true);
       this.$api.wareHouse
         .queryCamera(id)
         .then(res => {
@@ -1455,10 +1457,10 @@ export default {
               }
             }
           }
-          this.loading = false;
+          this.$store.commit("changeLoading",false);
         })
         .catch(e => {
-          this.loading = false;
+          this.$store.commit("changeLoading",false);
           this.$Message.error(e);
         });
     },
@@ -1486,7 +1488,7 @@ export default {
         this.$Message.info("输出端口不能为空");
         return false;
       }
-      this.loading = true;
+       this.$store.commit("changeLoading",true);
       //组装颜色参数
 
       if (this.cameraInfo.zones) {
@@ -1514,13 +1516,13 @@ export default {
                 zones[i].visible = true;
               }
             }
-            this.loading = false;
+            this.$store.commit("changeLoading",false);
             this.$Message.success("保存成功");
             this.queryAllData();
             this.changeFlag = false;
           })
           .catch(e => {
-            this.loading = false;
+             this.$store.commit("changeLoading",false);
             this.$Message.error(e);
           });
       } else {
@@ -1531,14 +1533,14 @@ export default {
               this.resultData = JSON.parse(JSON.stringify(res.data));
               this.cameraInfo = res.data;
             }
-            this.loading = false;
+            this.$store.commit("changeLoading",false);
             this.$Message.success("新增成功");
             let _this = this;
             this.queryAllData();
             this.changeFlag = false;
           })
           .catch(e => {
-            this.loading = false;
+            this.$store.commit("changeLoading",false);
             this.$Message.error(e);
           });
       }
@@ -1861,8 +1863,11 @@ fieldset[disabled] .ivu-btn-primary:hover {
 
 /*右侧仓库*/
 .area_container {
-  height: calc(100vh - 35px - 42px - 50px - 70px);
+  height: calc(100vh - 35px - 42px - 50px);
   overflow-y: auto;
+}
+.area_container.has_bar{
+   height: calc(100vh - 35px - 42px - 50px - 70px);
 }
 .area_container li {
   height: 72px;
