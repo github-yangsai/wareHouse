@@ -1,6 +1,14 @@
 <template>
   <div>
     <!--tab-->
+     <!--编辑NVR弹框-->
+    <edit-NVR
+      :openFlag="nvrFlag"
+      :funtionFlag="nvrF"
+      :data="itemNvr"
+      @closePopup="closePopup"
+      @queryAllData="queryAllData"
+    ></edit-NVR>
     <Row>
       <Col span="6">
         <div class="nvr_tab">
@@ -42,7 +50,7 @@
                <div class="move_list">
                  <h4>移动到</h4>
                   <ul>
-                    <li v-for="(item2,index2) in nvrList" :key="item2.id" @click="moveTonvr(i,item2)">
+                    <li v-for="(item2,index2) in nvrList" :key="item2.id" @click="moveTonvr(i,item2)" v-if="item.nvr.id != item2.id">
                       {{item2.name}}
                     </li>
                   </ul>
@@ -54,26 +62,17 @@
         <a href="javascript:void(0)" class="add_btn" @click="addCamera">新增摄像头</a>
       </Col>
     </Row>
-    <!--编辑NVR弹框-->
-    <edit-NVR
-      :openFlag="nvrFlag"
-      :funtionFlag="nvrF"
-      :data="itemNvr"
-      @closePopup="closePopup"
-      @queryAllData="queryAllData"
-    ></edit-NVR>
-    <!-- <camera-info :openFlag="cameraFlag" :funtionFlag="cameraF" @closePopup="closeCamera"></camera-info> -->
+   
+   
   </div>
 </template>
 
 <script>
 import editNVR from "@/components/nvrInfo";
-import cameraInfo from "@/components/cameraInfo";
 export default {
   name: "sideMenu",
   components: {
-    editNVR,
-    cameraInfo
+    editNVR
   },
   props: ["nvrList", "isChanged"],
   data() {
@@ -121,9 +120,13 @@ export default {
         content:
           "请确认是否将摄像头【" + this.cameraList[i].name + "】移动至NVR【" + item.name + "】中?",
         onOk: () => {
-          this.cameraList[i].nvr.id = item.id;
-          this.$api.wareHouse.reviewCamera(this.cameraList[i].id,this.cameraList[i]).then(res => {
+          //组装参数
+          let params = JSON.parse(JSON.stringify(this.cameraList[i]));
+          params.nvr.id = item.id;
+          this.$api.wareHouse.reviewCamera(this.cameraList[i].id, params).then(res => {
+            this.cameraList[i].nvr.id = item.id;
             this.cameraList.splice(i,1);
+            this.$emit("changeShowCameraFlag",false);
             this.$Message.success("移动成功");
             this.queryAllData();
           });
@@ -157,7 +160,15 @@ export default {
       //打开NVR信息
       this.nvrFlag = true;
       this.navF = flag;
-      this.itemNvr = JSON.parse(JSON.stringify(data));
+      let a = JSON.parse(JSON.stringify(data));
+      
+      for (let item in a) {
+        console.log(typeof a[item])
+        if (typeof a[item] === 'number') {
+          a[item] += '';
+        }
+      }
+      this.itemNvr = a;
     },
     closePopup() {
       this.nvrFlag = false;
@@ -312,11 +323,15 @@ export default {
   transition: width 0.3s;
   width: 50px;
   padding: 15px 5px;
+  overflow: hidden;
 }
 /* .nvr_tab li span:hover, */
 .nvr_tab li.current span {
   background: #071826;
   color: #fff;
+}
+.nvr_tab li span:hover{
+  width:auto;
 }
 .edit_btn {
   color: #4d6e87;
@@ -336,10 +351,13 @@ export default {
 .delnvr_btn {
   display: none;
   position: absolute;
-  right: -5px;
-  top: -7px;
-  font-size: 16px;
-  color: #f00;
+  right:2px;
+  top: -3px;
+  font-size: 14px;
+  color: #fff;
+}
+.delnvr_btn:hover{
+  color:#ff0000;
 }
 .nvr_card {
   background: #071826;

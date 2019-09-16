@@ -106,6 +106,7 @@
             @updateCameraInfo="updateCameraInfo"
             @clickedCamera="clickedCamera"
             @queryAllData="queryAllData"
+            @changeShowCameraFlag="changeShowCameraFlag"
             ref="sideMenu"
           ></side-menu>
         </Sider>
@@ -325,6 +326,9 @@ export default {
     };
   },
   methods: {
+    changeShowCameraFlag(val){
+      this.showCameraFlag = val;
+    },
     setAllvisible(val) {
       //设置区域全部显示和隐藏
       this.unChangeAll = false;

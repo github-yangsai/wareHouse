@@ -33,15 +33,14 @@
               <FormItem label="密码" prop="password">
                 <Input v-model="data.password" placeholder="请输入密码" />
               </FormItem>
-              <FormItem label="备注" prop="remark">
-                <Input v-model="data.remark" type="textarea" placeholder="请输入备注" />
+              <FormItem label="备注" prop="comment">
+                <Input v-model="data.comment" type="textarea" placeholder="请输入备注" />
               </FormItem>
             </Col>
           </Row>
         </Form>
       </div>
       <div class="bar_box clearfix">
-        <!-- <a href="javascript:void(0)" @click="delData">删除NVR</a> -->
         <div class="btn_box">
           <input type="button" value="取消" class="solid_btn" @click="closeDialog" />
           <input type="button" value="确定" class="full_btn" @click="saveData('formValidate')" />
@@ -53,55 +52,89 @@
 
 <script>
 export default {
-  name: "cameraInfo",
+  name: "nvrInfo",
   data() {
     const validatePort = (rule, value, callback) => {
+      if(!value){
+         callback(new Error("端口号不能为空"));
+         return false;
+      }
       if (!/^\d+$/.test(value)) {
         callback(new Error("端口号只能是数字"));
+        return false;
       }
+      let numberVal = parseInt(value);
+      if (numberVal < 1 || numberVal > 65535) {
+        callback(new Error("端口号范围1-65535"));
+        return false;
+      }
+      callback();
+    };
+    const validateChannels = (rule, value, callback) => {
+      if(!value){
+         callback(new Error("通道数不能为空"));
+         return false;
+      }
+      if (!/^\d+$/.test(value)) {
+        callback(new Error("通道数只能是数字"));
+        return false;
+      }
+      callback();
+    };
+    const validateIP = (rule, value, callback) => {
+      if(!value){
+         callback(new Error("ip地址不能为空"));
+         return false;
+      }
+      let reg = /^((\d)|([1-9]\d)|(1\d{2})|((2[0-4]\d)|(25[0-5])))(\.((\d)|([1-9]\d)|(1\d{2})|((2[0-4]\d)|(25[0-5])))){3}$/;
+      if (!reg.test(value)) {
+        callback(new Error("ip地址格式错误"));
+        return false;
+      }
+      callback();
     };
     return {
+      resultData:{},
       ruleValidate: {
-        name: [
+        name:[
           {
             required: true,
             message: "名称不能为空",
             trigger: "blur"
           }
         ],
-        ip: [
+        ip:[
           {
             required: true,
-            message: "ip地址不能为空",
-            trigger: "blur"
+            trigger: "blur",
+            validator:validateIP
           }
           // { type: "email", message: "Incorrect email format", trigger: "blur" }
         ],
-        username: [
+        username:[
           {
             required: true,
             message: "用户名不能为空",
             trigger: "blur"
           }
         ],
-        password: [
-          { required: true, message: "密码不能为空", trigger: "change" }
+        password:[
+          { required: true, message: "密码不能为空", trigger: "blur" }
         ],
-        // port: [
-        //   {
-        //     required: true,
-        //     message: "端口不能为空",
-        //     trigger: "blur",
-        //     // validate: validatePort
-        //   }
-        // ],
-        // channels: [
-        //   {
-        //     required: true,
-        //     message: "通道数不能为空",
-        //     trigger: "blur"
-        //   }
-        // ]
+        port: [
+          {
+            required: true,
+            trigger: "blur",
+            validator: validatePort
+          }
+        ],
+        channels: [
+          {
+            required: true,
+            trigger: "blur",
+            validator: validateChannels
+          }
+        ]
       }
     };
   },
@@ -109,8 +142,10 @@ export default {
   watch: {
     openFlag(val) {
       if (val) {
-        if (this.funtionFlag == "add") {
-        }
+        this.$refs.formValidate.resetFields(); //重置
+       if(this.funtionFlag != 'add'){
+         this.resultData = JSON.parse(JSON.stringify(this.data));
+       }
       }
     }
   },
@@ -122,19 +157,36 @@ export default {
     //   this.$refs[name].resetFields();
     // },
     saveData(name) {
+      //判断有没有修改数据
+      let reviewFlag = false;
+      for(let key in this.data){
+        if(key != "camera"){
+          if(this.data[key] != this.resultData[key]){
+            reviewFlag = true;
+            break;
+          }
+        }
+      }
+      if(reviewFlag){
+        this.closeDialog();
+        return false;
+      }
       //修改数据
       this.$refs[name].validate(valid => {
-        debugger
         if (valid) {
           //验证通过
+          let params = JSON.parse(JSON.stringify(this.data));
+          params.port = parseInt(params.port);
+          params.channels = parseInt(params.channels);
           if (this.data.id) {
-            this.$api.wareHouse.reviewNvr(this.data.id, this.data).then(res => {
+            params.id = parseInt(params.id);
+            this.$api.wareHouse.reviewNvr(this.data.id, params).then(res => {
               this.$Message.success("修改成功");
               this.$emit("queryAllData");
               this.closeDialog();
             });
           } else {
-            this.$api.wareHouse.addNvr(this.data).then(res => {
+            this.$api.wareHouse.addNvr(params).then(res => {
               this.$emit("queryAllData");
               this.$Message.success("新增成功");
               this.closeDialog();
@@ -142,7 +194,7 @@ export default {
           }
         } else {
           //验证不通过
-          this.$Message.info("请完善信息");
+          this.$Message.warning("请完善信息");
         }
       });
     }

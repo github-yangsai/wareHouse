@@ -2,16 +2,21 @@
   * axios封装
   * 请求拦截、响应拦截、错误统一处理
   */
+ import {Message} from 'iview'
  import axios from 'axios';
  import router from '../../router';
  import store from '../../store/index';
+ import 'iview/dist/styles/iview.css'
+
+//  debugger
+//  console.log(iView)
  
  /**
    * 提示函数
    * 禁止点击蒙层、显示一秒后关闭
    */
  const tip = msg => {
-     alert(msg)
+    Message.error(msg);
  }
  
  /**
@@ -85,6 +90,7 @@
          const { response } = error;
          if (response) {
              // 请求已发出，但是不在2xx的范围
+             tip(response.data);
              errorHandle(response.status, response.data.message);
              return Promise.reject(response);
          } else {
