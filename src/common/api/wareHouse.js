@@ -53,6 +53,9 @@ const wareHouse = {
     },
     nvrConfig(){
         return axios.get(`${base.nvr_config}/?format=csv`);
+    },
+    nvrConfigJSON(){
+        return axios.get(`${base.nvr_config}/?format=json`);
     }
 
 

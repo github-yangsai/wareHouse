@@ -1,5 +1,7 @@
 <template>
   <div>
+    <view-config :data="configCSV" :openFlag="viewConfigFlag" @closePopup="closeConfig"></view-config>
+    <!-- =S 倒计时动画-->
     <div class="countdown_tips" v-if="countDownFlag">
       <i-circle
         :percent="countdownPercent"
@@ -12,10 +14,8 @@
         <span style="font-size:40px" class="text">{{ seconds }}s</span>
       </i-circle>
     </div>
-    <Spin size="large" fix v-if="loading">
-      <!-- <Icon type="ios-loading" size="18" class="demo-spin-icon-load"></Icon>
-      <div>加载中...</div>-->
-    </Spin>
+    <!-- =E 倒计时动画-->
+    <Spin size="large" fix v-if="loading"></Spin>
     <Layout class="con_wrap">
       <Header>
         <div class="file_bar">
@@ -25,7 +25,7 @@
             </a>
             <DropdownMenu slot="list">
               <DropdownItem name="restartServer">重启服务器</DropdownItem>
-              <DropdownItem name="exportTable">导出配置表</DropdownItem>
+              <DropdownItem name="viewTable">查看配置表</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>
@@ -200,15 +200,18 @@
 <script>
 import sideMenu from "@/components/sideMenu";
 import drawArea from "@/components/drawArea";
-
+import viewConfig from "@/components/viewConfig";
 export default {
   name: "mainFrame",
   components: {
     sideMenu,
-    drawArea
+    drawArea,
+    viewConfig
   },
   data() {
     return {
+      configCSV:null,
+      viewConfigFlag: false,
       unChangeAll: true,
       eyesAll: "1",
       allNvrData: {},
@@ -287,7 +290,7 @@ export default {
     }
   },
   computed: {
-    loading(){
+    loading() {
       return this.$store.state.loading;
     },
     areaList() {
@@ -326,7 +329,7 @@ export default {
     };
   },
   methods: {
-    changeShowCameraFlag(val){
+    changeShowCameraFlag(val) {
       this.showCameraFlag = val;
     },
     setAllvisible(val) {
@@ -345,26 +348,10 @@ export default {
       this.$forceUpdate();
       this.$refs.drawAreaBox.init();
     },
-    tranferDate(val) {
-      if (val) {
-        let date = new Date(val);
-        let year = date.getFullYear();
-        let month = date.getMonth() + 1;
-        let day = date.getDate();
-        let hour = date.getHours();
-        let min = date.getMinutes();
-        let second = date.getSeconds();
-        return `${year}${month < 10 ? "0" + month : month}${
-          day < 10 ? "0" + day : day
-        }${hour < 10 ? "0" + hour : hour}${min < 10 ? "0" + min : min}${
-          second < 10 ? "0" + second : second
-        }`;
-      }
-    },
     updateChange(val) {
       this.changeFlag = val;
     },
-    setDisplayhide(){
+    setDisplayhide() {
       //设置全部显示、隐藏的按钮状态
       let allDisplay = this.areaList.every(function(item, index, array) {
         return item.visible == true;
@@ -372,15 +359,15 @@ export default {
       let allHide = this.areaList.every(function(item, index, array) {
         return item.visible == false;
       });
-      if(allDisplay){
-        this.eyesAll = '1';
+      if (allDisplay) {
+        this.eyesAll = "1";
         return false;
       }
-      if(allHide){
-        this.eyesAll = '0';
+      if (allHide) {
+        this.eyesAll = "0";
         return false;
       }
-      this.eyesAll = '';
+      this.eyesAll = "";
     },
     displayArea(index) {
       let flag = this.areaList[index].visible;
@@ -1235,7 +1222,7 @@ export default {
       } else {
         this.changeFlag = true;
         //新增时查询默认端口和通道
-        this.$store.commit("changeLoading",true);
+        this.$store.commit("changeLoading", true);
         this.$api.wareHouse
           .cameraSuggest(data.nvr.id)
           .then(res => {
@@ -1244,10 +1231,10 @@ export default {
               this.cameraInfo.nvr_channel = res.data.suggest_nvr_channel;
               this.cameraInfo.output_port = res.data.suggest_output_port;
             }
-            this.$store.commit("changeLoading",false);
+            this.$store.commit("changeLoading", false);
           })
           .catch(e => {
-            this.$store.commit("changeLoading",false);
+            this.$store.commit("changeLoading", false);
             this.$Message.error(e);
           });
         //
@@ -1377,7 +1364,6 @@ export default {
       for (let key in resultData) {
         if (key != "zones" && key != "nvr") {
           if (resultData[key] != data[key]) {
-            console.log("key:", key);
             flag = false;
             return flag;
           }
@@ -1388,7 +1374,6 @@ export default {
       let dataZones = data.zones;
       if (reZones.length != dataZones.length) {
         flag = false;
-        console.log("总长度", flag);
         return flag;
       }
       //比较两个对象中点的配置项
@@ -1430,7 +1415,7 @@ export default {
     queryCamera(id, flag) {
       //查询单个摄像头数据
       let _this = this;
-      this.$store.commit("changeLoading",true);
+      this.$store.commit("changeLoading", true);
       this.$api.wareHouse
         .queryCamera(id)
         .then(res => {
@@ -1439,7 +1424,7 @@ export default {
             this.cameraInfo = res.data;
             this.changeFlag = false;
             this.unChangeAll = true;
-            this.eyesAll = '1';
+            this.eyesAll = "1";
             for (let i = 0; i < this.areaList.length; i++) {
               this.areaList[i].showAreaInput = false;
               this.areaList[i].visible = true;
@@ -1461,10 +1446,10 @@ export default {
               }
             }
           }
-          this.$store.commit("changeLoading",false);
+          this.$store.commit("changeLoading", false);
         })
         .catch(e => {
-          this.$store.commit("changeLoading",false);
+          this.$store.commit("changeLoading", false);
           this.$Message.error(e);
         });
     },
@@ -1492,7 +1477,7 @@ export default {
         this.$Message.info("输出端口不能为空");
         return false;
       }
-       this.$store.commit("changeLoading",true);
+      this.$store.commit("changeLoading", true);
       //组装颜色参数
 
       if (this.cameraInfo.zones) {
@@ -1520,13 +1505,13 @@ export default {
                 zones[i].visible = true;
               }
             }
-            this.$store.commit("changeLoading",false);
+            this.$store.commit("changeLoading", false);
             this.$Message.success("保存成功");
             this.queryAllData();
             this.changeFlag = false;
           })
           .catch(e => {
-             this.$store.commit("changeLoading",false);
+            this.$store.commit("changeLoading", false);
             this.$Message.error(e);
           });
       } else {
@@ -1537,14 +1522,14 @@ export default {
               this.resultData = JSON.parse(JSON.stringify(res.data));
               this.cameraInfo = res.data;
             }
-            this.$store.commit("changeLoading",false);
+            this.$store.commit("changeLoading", false);
             this.$Message.success("新增成功");
             let _this = this;
             this.queryAllData();
             this.changeFlag = false;
           })
           .catch(e => {
-            this.$store.commit("changeLoading",false);
+            this.$store.commit("changeLoading", false);
             this.$Message.error(e);
           });
       }
@@ -1632,10 +1617,16 @@ export default {
           _this.$Message.success("删除成功");
 
           this.setDisplayhide();
-
         },
         onCancel: () => {}
       });
+    },
+    openViewConfig() {
+      this.viewConfigFlag = true;
+    },
+    closeConfig() {
+      this.viewConfigFlag = false;
+      this.configCSV = null;
     },
     setOption(name) {
       // let _this = this;
@@ -1650,29 +1641,12 @@ export default {
           },
           onCancel: () => {}
         });
-      } else if (name == "exportTable") {
-        //导出配置表
-        this.$api.wareHouse.nvrConfig().then(res => {
-          console.log(res.data);
+      } else if (name == "viewTable") {
+        //查看配置表
+        this.$api.wareHouse.nvrConfigJSON().then(res => {
           const content = res.data;
-          const blob = new Blob([content]);
-          let times = new Date().getTime();
-          let currentDate = this.tranferDate(times);
-          const fileName = currentDate + "配置表.csv";
-          if ("download" in document.createElement("a")) {
-            // 非IE下载
-            const elink = document.createElement("a");
-            elink.download = fileName;
-            elink.style.display = "none";
-            elink.href = URL.createObjectURL(blob);
-            document.body.appendChild(elink);
-            elink.click();
-            URL.revokeObjectURL(elink.href); // 释放URL 对象
-            document.body.removeChild(elink);
-          } else {
-            //IE10+下载
-            navigator.msSaveBlob(blob, fileName);
-          }
+          this.configCSV = res.data;
+          this.viewConfigFlag = true;
         });
       }
     }
@@ -1870,8 +1844,8 @@ fieldset[disabled] .ivu-btn-primary:hover {
   height: calc(100vh - 35px - 42px - 50px);
   overflow-y: auto;
 }
-.area_container.has_bar{
-   height: calc(100vh - 35px - 42px - 50px - 70px);
+.area_container.has_bar {
+  height: calc(100vh - 35px - 42px - 50px - 70px);
 }
 .area_container li {
   height: 72px;
@@ -2065,5 +2039,15 @@ fieldset[disabled] .ivu-btn-primary:hover {
 }
 .operate_bar .ivu-radio {
   padding-right: 7px;
+}
+.file_bar .ivu-select-dropdown {
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+}
+.file_bar .ivu-dropdown-item {
+  color: #333;
+  font-size: 14px !important;
+  padding: 10px 18px;
 }
 </style>
