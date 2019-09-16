@@ -78,21 +78,11 @@
               </div>
               <div class="clearfix fill_box">
                 <span class="field">输出通道号：</span>
-                <Input
-                  v-model="cameraInfo.nvr_channel"
-                  type="number"
-                  placeholder="请输入通道号"
-                  style="width:50px;"
-                />
+                <Input v-model="cameraInfo.nvr_channel" type="number" style="width:50px;" />
               </div>
               <div class="clearfix fill_box">
                 <span class="field">输出端口：</span>
-                <Input
-                  v-model="cameraInfo.output_port"
-                  type="number"
-                  placeholder="请输入端口"
-                  style="width:70px;"
-                />
+                <Input v-model="cameraInfo.output_port" type="number" style="width:70px;" />
               </div>
               <div class="fill_box">
                 <a href="javascript:void(0)" class="capture_btn" @click="clickCapture">点击截屏</a>
@@ -125,6 +115,7 @@
             :lineWidth="strokeVal"
             :lineColor="lineColor"
             :index="selectedArea"
+            :unChangeAll="unChangeAll"
             @updateCameraInfo="updateCameraInfo"
             @updateChange="updateChange"
             :notSave="notSave"
@@ -137,6 +128,12 @@
           class="right_bar"
           v-if="showCameraFlag && this.cameraInfo.img_url && cameraInfo.img_url!='http://'"
         >
+          <div class="operate_bar">
+            <RadioGroup v-model="eyesAll" @on-change="setAllvisible">
+              <Radio label="1">全部显示</Radio>
+              <Radio label="0">全部隐藏</Radio>
+            </RadioGroup>
+          </div>
           <div class="area_container">
             <ul>
               <li
@@ -211,6 +208,8 @@ export default {
   },
   data() {
     return {
+      unChangeAll: true,
+      eyesAll: "1",
       allNvrData: {},
       nvrList: [],
       color: "#ff0000",
@@ -315,18 +314,6 @@ export default {
   mounted() {
     this.queryAllData();
     let _this = this;
-    //  window.onresize = () => {
-    //   return (() => {
-    //     window.screenWidth = document.body.clientWidth;
-    //     _this.screenWidth = window.screenWidth;
-    //   })();
-    // };
-    // window.addEventListener("resize", ()=>{
-    //   this.$nextTick(() => {
-    //     console.log(22)
-    //     this.$refs.drawAreaBox.resize();
-    //   });
-    // })
     window.onkeydown = e => {
       if (this.showCameraFlag && this.cameraInfo.img_url) {
         if (e.ctrlKey && e.keyCode == 90) {
@@ -336,6 +323,22 @@ export default {
     };
   },
   methods: {
+    setAllvisible(val) {
+      //设置区域全部显示和隐藏
+      this.unChangeAll = false;
+      let list = this.cameraInfo.zones;
+      if (val == "1") {
+        for (let i = 0; i < list.length; i++) {
+          this.$set(list[i], "visible", true);
+        }
+      } else {
+        for (let i = 0; i < list.length; i++) {
+          this.$set(list[i], "visible", false);
+        }
+      }
+      this.$forceUpdate();
+      this.$refs.drawAreaBox.init();
+    },
     tranferDate(val) {
       if (val) {
         let date = new Date(val);
@@ -355,11 +358,30 @@ export default {
     updateChange(val) {
       this.changeFlag = val;
     },
+    setDisplayhide(){
+      //设置全部显示、隐藏的按钮状态
+      let allDisplay = this.areaList.every(function(item, index, array) {
+        return item.visible == true;
+      });
+      let allHide = this.areaList.every(function(item, index, array) {
+        return item.visible == false;
+      });
+      if(allDisplay){
+        this.eyesAll = '1';
+        return false;
+      }
+      if(allHide){
+        this.eyesAll = '0';
+        return false;
+      }
+      this.eyesAll = '';
+    },
     displayArea(index) {
       let flag = this.areaList[index].visible;
       this.$set(this.areaList[index], "visible", !flag);
       this.$forceUpdate();
       this.$refs.drawAreaBox.init();
+      this.setDisplayhide();
     },
     changeLinewidth(val) {
       //改变描边时
@@ -422,773 +444,773 @@ export default {
     },
     queryAllData() {
       //查询所有NVR数据
-      // this.nvrList = [
-      //   {
-      //     id: 1,
-      //     ip: "192.168.16.230",
-      //     port: 554,
-      //     username: "test",
-      //     password: "test1234",
-      //     channels: 16,
-      //     name: "nvr01",
-      //     cameras: [
-      //       {
-      //         id: 1,
-      //         name: "前门摄像机",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 1,
-      //         zones: [
-      //           {
-      //             name: "库位名称",
-      //             line_red: 255,
-      //             line_green: 0,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [409, 519],
-      //               [509, 515],
-      //               [521, 581],
-      //               [574, 582],
-      //               [587, 620],
-      //               [423, 629]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称2",
-      //             line_red: 255,
-      //             line_green: 165,
-      //             line_blue: 255,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [249, 569],
-      //               [325, 564],
-      //               [329, 558],
-      //               [402, 551],
-      //               [411, 568],
-      //               [417, 597],
-      //               [417, 621],
-      //               [432, 625],
-      //               [436, 637],
-      //               [456, 639],
-      //               [466, 681],
-      //               [350, 687],
-      //               [248, 685],
-      //               [238, 612],
-      //               [248, 612]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-08-29 11:35:52"
-      //       },
-      //       {
-      //         id: 200,
-      //         name: "前门摄像机",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 2,
-      //         zones: [
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [659, 319],
-      //               [759, 315],
-      //               [781, 381],
-      //               [824, 382],
-      //               [837, 420],
-      //               [683, 429]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-08-29 11:21:24"
-      //       },
-      //       {
-      //         id: 356,
-      //         name: "前门摄像机",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 3,
-      //         zones: [
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-08-29 14:37:06"
-      //       },
-      //       {
-      //         id: 4,
-      //         name: "前门摄像机",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 4,
-      //         zones: [
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-08-29 14:37:15"
-      //       },
-      //       {
-      //         id: 523,
-      //         name: "前门摄像机",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 5,
-      //         zones: [
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-08-29 14:39:31"
-      //       },
-      //       {
-      //         id: 6,
-      //         name: "前门摄像机",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 6,
-      //         zones: [
-      //           {
-      //             name: "库位名称",
-      //             line_red: 255,
-      //             line_green: 0,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [409, 519],
-      //               [509, 515],
-      //               [521, 581],
-      //               [574, 582],
-      //               [587, 620],
-      //               [423, 629]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称2",
-      //             line_red: 255,
-      //             line_green: 165,
-      //             line_blue: 255,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [249, 569],
-      //               [325, 564],
-      //               [329, 558],
-      //               [402, 551],
-      //               [411, 568],
-      //               [417, 597],
-      //               [417, 621],
-      //               [432, 625],
-      //               [436, 637],
-      //               [456, 639],
-      //               [466, 681],
-      //               [350, 687],
-      //               [248, 685],
-      //               [238, 612],
-      //               [248, 612]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-09-02 16:45:31"
-      //       },
-      //       {
-      //         id: 7,
-      //         name: "前门摄像机",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 7,
-      //         zones: [
-      //           {
-      //             name: "库位名称",
-      //             line_red: 255,
-      //             line_green: 0,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [409, 519],
-      //               [509, 515],
-      //               [521, 581],
-      //               [574, 582],
-      //               [587, 620],
-      //               [423, 629]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称2",
-      //             line_red: 255,
-      //             line_green: 165,
-      //             line_blue: 255,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [249, 569],
-      //               [325, 564],
-      //               [329, 558],
-      //               [402, 551],
-      //               [411, 568],
-      //               [417, 597],
-      //               [417, 621],
-      //               [432, 625],
-      //               [436, 637],
-      //               [456, 639],
-      //               [466, 681],
-      //               [350, 687],
-      //               [248, 685],
-      //               [238, 612],
-      //               [248, 612]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-09-02 16:46:05"
-      //       },
-      //       {
-      //         id: 8,
-      //         name: "前门摄像机",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 8,
-      //         zones: [
-      //           {
-      //             name: "库位名称",
-      //             line_red: 255,
-      //             line_green: 0,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [409, 519],
-      //               [509, 515],
-      //               [521, 581],
-      //               [574, 582],
-      //               [587, 620],
-      //               [423, 629]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称2",
-      //             line_red: 255,
-      //             line_green: 165,
-      //             line_blue: 255,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [249, 569],
-      //               [325, 564],
-      //               [329, 558],
-      //               [402, 551],
-      //               [411, 568],
-      //               [417, 597],
-      //               [417, 621],
-      //               [432, 625],
-      //               [436, 637],
-      //               [456, 639],
-      //               [466, 681],
-      //               [350, 687],
-      //               [248, 685],
-      //               [238, 612],
-      //               [248, 612]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-09-02 16:46:18"
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     id: 2,
-      //     ip: "192.168.16.230",
-      //     port: 554,
-      //     username: "test",
-      //     password: "test1234",
-      //     channels: 16,
-      //     name: "nvr02",
-      //     cameras: [
-      //       {
-      //         id: 10,
-      //         name: "后门摄像机002",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 1,
-      //         zones: [
-      //           {
-      //             name: "库位名称",
-      //             line_red: 255,
-      //             line_green: 0,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [409, 519],
-      //               [509, 515],
-      //               [521, 581],
-      //               [574, 582],
-      //               [587, 620],
-      //               [423, 629]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称2",
-      //             line_red: 255,
-      //             line_green: 165,
-      //             line_blue: 255,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [249, 569],
-      //               [325, 564],
-      //               [329, 558],
-      //               [402, 551],
-      //               [411, 568],
-      //               [417, 597],
-      //               [417, 621],
-      //               [432, 625],
-      //               [436, 637],
-      //               [456, 639],
-      //               [466, 681],
-      //               [350, 687],
-      //               [248, 685],
-      //               [238, 612],
-      //               [248, 612]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-08-29 11:35:52"
-      //       },
-      //       {
-      //         id: 52,
-      //         name: "前门摄像机",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 1,
-      //         zones: [
-      //           {
-      //             name: "库位名称",
-      //             line_red: 255,
-      //             line_green: 0,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [409, 519],
-      //               [509, 515],
-      //               [521, 581],
-      //               [574, 582],
-      //               [587, 620],
-      //               [423, 629]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称2",
-      //             line_red: 255,
-      //             line_green: 165,
-      //             line_blue: 255,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [249, 569],
-      //               [325, 564],
-      //               [329, 558],
-      //               [402, 551],
-      //               [411, 568],
-      //               [417, 597],
-      //               [417, 621],
-      //               [432, 625],
-      //               [436, 637],
-      //               [456, 639],
-      //               [466, 681],
-      //               [350, 687],
-      //               [248, 685],
-      //               [238, 612],
-      //               [248, 612]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-08-29 11:35:52"
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     id: 3,
-      //     ip: "192.168.16.223",
-      //     port: 15,
-      //     username: "test",
-      //     password: "test",
-      //     channels: 16,
-      //     name: "nvr03",
-      //     cameras: [
-      //       {
-      //         id: 14,
-      //         name: "前门摄像机002",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 1,
-      //         zones: [
-      //           {
-      //             name: "库位名称",
-      //             line_red: 255,
-      //             line_green: 0,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [409, 519],
-      //               [509, 515],
-      //               [521, 581],
-      //               [574, 582],
-      //               [587, 620],
-      //               [423, 629]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称2",
-      //             line_red: 255,
-      //             line_green: 165,
-      //             line_blue: 255,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [249, 569],
-      //               [325, 564],
-      //               [329, 558],
-      //               [402, 551],
-      //               [411, 568],
-      //               [417, 597],
-      //               [417, 621],
-      //               [432, 625],
-      //               [436, 637],
-      //               [456, 639],
-      //               [466, 681],
-      //               [350, 687],
-      //               [248, 685],
-      //               [238, 612],
-      //               [248, 612]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-08-29 11:35:52"
-      //       },
-      //       {
-      //         id: 288,
-      //         name: "前门摄像机",
-      //         rtsp_url:
-      //           "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
-      //         width: 1280,
-      //         height: 720,
-      //         img_url: "http://",
-      //         nvr: {
-      //           id: 1
-      //         },
-      //         nvr_channel: 1,
-      //         zones: [
-      //           {
-      //             name: "库位名称",
-      //             line_red: 255,
-      //             line_green: 0,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [409, 519],
-      //               [509, 515],
-      //               [521, 581],
-      //               [574, 582],
-      //               [587, 620],
-      //               [423, 629]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称2",
-      //             line_red: 255,
-      //             line_green: 165,
-      //             line_blue: 255,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [249, 569],
-      //               [325, 564],
-      //               [329, 558],
-      //               [402, 551],
-      //               [411, 568],
-      //               [417, 597],
-      //               [417, 621],
-      //               [432, 625],
-      //               [436, 637],
-      //               [456, 639],
-      //               [466, 681],
-      //               [350, 687],
-      //               [248, 685],
-      //               [238, 612],
-      //               [248, 612]
-      //             ]
-      //           },
-      //           {
-      //             name: "库位名称3",
-      //             line_red: 124,
-      //             line_green: 252,
-      //             line_blue: 0,
-      //             line_alpha: 255,
-      //             line_width: 4,
-      //             points: [
-      //               [246, 686],
-      //               [335, 686],
-      //               [359, 691],
-      //               [469, 689],
-      //               [474, 717],
-      //               [250, 716]
-      //             ]
-      //           }
-      //         ],
-      //         created: "2019-08-29 11:35:52"
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     id: 4,
-      //     ip: "192.168.16.223",
-      //     port: 15,
-      //     username: "test",
-      //     password: "test",
-      //     channels: 16,
-      //     name: "nvr04",
-      //     cameras: []
-      //   },
-      //   {
-      //     id: 5,
-      //     ip: "192.168.16.223",
-      //     port: 15,
-      //     username: "test",
-      //     password: "test",
-      //     channels: 16,
-      //     name: "nvr05",
-      //     cameras: []
-      //   }
-      // ];
+      this.nvrList = [
+        {
+          id: 1,
+          ip: "192.168.16.230",
+          port: 554,
+          username: "test",
+          password: "test1234",
+          channels: 16,
+          name: "nvr01",
+          cameras: [
+            {
+              id: 1,
+              name: "前门摄像机",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 1,
+              zones: [
+                {
+                  name: "库位名称",
+                  line_red: 255,
+                  line_green: 0,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [409, 519],
+                    [509, 515],
+                    [521, 581],
+                    [574, 582],
+                    [587, 620],
+                    [423, 629]
+                  ]
+                },
+                {
+                  name: "库位名称2",
+                  line_red: 255,
+                  line_green: 165,
+                  line_blue: 255,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [249, 569],
+                    [325, 564],
+                    [329, 558],
+                    [402, 551],
+                    [411, 568],
+                    [417, 597],
+                    [417, 621],
+                    [432, 625],
+                    [436, 637],
+                    [456, 639],
+                    [466, 681],
+                    [350, 687],
+                    [248, 685],
+                    [238, 612],
+                    [248, 612]
+                  ]
+                },
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-08-29 11:35:52"
+            },
+            {
+              id: 200,
+              name: "前门摄像机",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 2,
+              zones: [
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [659, 319],
+                    [759, 315],
+                    [781, 381],
+                    [824, 382],
+                    [837, 420],
+                    [683, 429]
+                  ]
+                }
+              ],
+              created: "2019-08-29 11:21:24"
+            },
+            {
+              id: 356,
+              name: "前门摄像机",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 3,
+              zones: [
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-08-29 14:37:06"
+            },
+            {
+              id: 4,
+              name: "前门摄像机",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 4,
+              zones: [
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-08-29 14:37:15"
+            },
+            {
+              id: 523,
+              name: "前门摄像机",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 5,
+              zones: [
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-08-29 14:39:31"
+            },
+            {
+              id: 6,
+              name: "前门摄像机",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 6,
+              zones: [
+                {
+                  name: "库位名称",
+                  line_red: 255,
+                  line_green: 0,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [409, 519],
+                    [509, 515],
+                    [521, 581],
+                    [574, 582],
+                    [587, 620],
+                    [423, 629]
+                  ]
+                },
+                {
+                  name: "库位名称2",
+                  line_red: 255,
+                  line_green: 165,
+                  line_blue: 255,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [249, 569],
+                    [325, 564],
+                    [329, 558],
+                    [402, 551],
+                    [411, 568],
+                    [417, 597],
+                    [417, 621],
+                    [432, 625],
+                    [436, 637],
+                    [456, 639],
+                    [466, 681],
+                    [350, 687],
+                    [248, 685],
+                    [238, 612],
+                    [248, 612]
+                  ]
+                },
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-09-02 16:45:31"
+            },
+            {
+              id: 7,
+              name: "前门摄像机",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 7,
+              zones: [
+                {
+                  name: "库位名称",
+                  line_red: 255,
+                  line_green: 0,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [409, 519],
+                    [509, 515],
+                    [521, 581],
+                    [574, 582],
+                    [587, 620],
+                    [423, 629]
+                  ]
+                },
+                {
+                  name: "库位名称2",
+                  line_red: 255,
+                  line_green: 165,
+                  line_blue: 255,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [249, 569],
+                    [325, 564],
+                    [329, 558],
+                    [402, 551],
+                    [411, 568],
+                    [417, 597],
+                    [417, 621],
+                    [432, 625],
+                    [436, 637],
+                    [456, 639],
+                    [466, 681],
+                    [350, 687],
+                    [248, 685],
+                    [238, 612],
+                    [248, 612]
+                  ]
+                },
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-09-02 16:46:05"
+            },
+            {
+              id: 8,
+              name: "前门摄像机",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 8,
+              zones: [
+                {
+                  name: "库位名称",
+                  line_red: 255,
+                  line_green: 0,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [409, 519],
+                    [509, 515],
+                    [521, 581],
+                    [574, 582],
+                    [587, 620],
+                    [423, 629]
+                  ]
+                },
+                {
+                  name: "库位名称2",
+                  line_red: 255,
+                  line_green: 165,
+                  line_blue: 255,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [249, 569],
+                    [325, 564],
+                    [329, 558],
+                    [402, 551],
+                    [411, 568],
+                    [417, 597],
+                    [417, 621],
+                    [432, 625],
+                    [436, 637],
+                    [456, 639],
+                    [466, 681],
+                    [350, 687],
+                    [248, 685],
+                    [238, 612],
+                    [248, 612]
+                  ]
+                },
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-09-02 16:46:18"
+            }
+          ]
+        },
+        {
+          id: 2,
+          ip: "192.168.16.230",
+          port: 554,
+          username: "test",
+          password: "test1234",
+          channels: 16,
+          name: "nvr02",
+          cameras: [
+            {
+              id: 10,
+              name: "后门摄像机002",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 1,
+              zones: [
+                {
+                  name: "库位名称",
+                  line_red: 255,
+                  line_green: 0,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [409, 519],
+                    [509, 515],
+                    [521, 581],
+                    [574, 582],
+                    [587, 620],
+                    [423, 629]
+                  ]
+                },
+                {
+                  name: "库位名称2",
+                  line_red: 255,
+                  line_green: 165,
+                  line_blue: 255,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [249, 569],
+                    [325, 564],
+                    [329, 558],
+                    [402, 551],
+                    [411, 568],
+                    [417, 597],
+                    [417, 621],
+                    [432, 625],
+                    [436, 637],
+                    [456, 639],
+                    [466, 681],
+                    [350, 687],
+                    [248, 685],
+                    [238, 612],
+                    [248, 612]
+                  ]
+                },
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-08-29 11:35:52"
+            },
+            {
+              id: 52,
+              name: "前门摄像机",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 1,
+              zones: [
+                {
+                  name: "库位名称",
+                  line_red: 255,
+                  line_green: 0,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [409, 519],
+                    [509, 515],
+                    [521, 581],
+                    [574, 582],
+                    [587, 620],
+                    [423, 629]
+                  ]
+                },
+                {
+                  name: "库位名称2",
+                  line_red: 255,
+                  line_green: 165,
+                  line_blue: 255,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [249, 569],
+                    [325, 564],
+                    [329, 558],
+                    [402, 551],
+                    [411, 568],
+                    [417, 597],
+                    [417, 621],
+                    [432, 625],
+                    [436, 637],
+                    [456, 639],
+                    [466, 681],
+                    [350, 687],
+                    [248, 685],
+                    [238, 612],
+                    [248, 612]
+                  ]
+                },
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-08-29 11:35:52"
+            }
+          ]
+        },
+        {
+          id: 3,
+          ip: "192.168.16.223",
+          port: 15,
+          username: "test",
+          password: "test",
+          channels: 16,
+          name: "nvr03",
+          cameras: [
+            {
+              id: 14,
+              name: "前门摄像机002",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 1,
+              zones: [
+                {
+                  name: "库位名称",
+                  line_red: 255,
+                  line_green: 0,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [409, 519],
+                    [509, 515],
+                    [521, 581],
+                    [574, 582],
+                    [587, 620],
+                    [423, 629]
+                  ]
+                },
+                {
+                  name: "库位名称2",
+                  line_red: 255,
+                  line_green: 165,
+                  line_blue: 255,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [249, 569],
+                    [325, 564],
+                    [329, 558],
+                    [402, 551],
+                    [411, 568],
+                    [417, 597],
+                    [417, 621],
+                    [432, 625],
+                    [436, 637],
+                    [456, 639],
+                    [466, 681],
+                    [350, 687],
+                    [248, 685],
+                    [238, 612],
+                    [248, 612]
+                  ]
+                },
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-08-29 11:35:52"
+            },
+            {
+              id: 288,
+              name: "前门摄像机",
+              rtsp_url:
+                "rtsp://play:play_123@192.168.16.230:554/cam/realmonitor?channel=2&subtype=0",
+              width: 1280,
+              height: 720,
+              img_url: "http://",
+              nvr: {
+                id: 1
+              },
+              nvr_channel: 1,
+              zones: [
+                {
+                  name: "库位名称",
+                  line_red: 255,
+                  line_green: 0,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [409, 519],
+                    [509, 515],
+                    [521, 581],
+                    [574, 582],
+                    [587, 620],
+                    [423, 629]
+                  ]
+                },
+                {
+                  name: "库位名称2",
+                  line_red: 255,
+                  line_green: 165,
+                  line_blue: 255,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [249, 569],
+                    [325, 564],
+                    [329, 558],
+                    [402, 551],
+                    [411, 568],
+                    [417, 597],
+                    [417, 621],
+                    [432, 625],
+                    [436, 637],
+                    [456, 639],
+                    [466, 681],
+                    [350, 687],
+                    [248, 685],
+                    [238, 612],
+                    [248, 612]
+                  ]
+                },
+                {
+                  name: "库位名称3",
+                  line_red: 124,
+                  line_green: 252,
+                  line_blue: 0,
+                  line_alpha: 255,
+                  line_width: 4,
+                  points: [
+                    [246, 686],
+                    [335, 686],
+                    [359, 691],
+                    [469, 689],
+                    [474, 717],
+                    [250, 716]
+                  ]
+                }
+              ],
+              created: "2019-08-29 11:35:52"
+            }
+          ]
+        },
+        {
+          id: 4,
+          ip: "192.168.16.223",
+          port: 15,
+          username: "test",
+          password: "test",
+          channels: 16,
+          name: "nvr04",
+          cameras: []
+        },
+        {
+          id: 5,
+          ip: "192.168.16.223",
+          port: 15,
+          username: "test",
+          password: "test",
+          channels: 16,
+          name: "nvr05",
+          cameras: []
+        }
+      ];
       this.$api.wareHouse.queryNvr().then(res => {
         if (res && res.data.results) {
           this.nvrList = res.data.results;
@@ -1410,6 +1432,8 @@ export default {
             this.resultData = JSON.parse(JSON.stringify(res.data));
             this.cameraInfo = res.data;
             this.changeFlag = false;
+            this.unChangeAll = true;
+            this.eyesAll = '1';
             for (let i = 0; i < this.areaList.length; i++) {
               this.areaList[i].showAreaInput = false;
               this.areaList[i].visible = true;
@@ -1600,6 +1624,9 @@ export default {
           _this.$refs.drawAreaBox.delOthers(index);
           _this.$refs.drawAreaBox.removePolygon(index);
           _this.$Message.success("删除成功");
+
+          this.setDisplayhide();
+
         },
         onCancel: () => {}
       });
@@ -1834,7 +1861,7 @@ fieldset[disabled] .ivu-btn-primary:hover {
 
 /*右侧仓库*/
 .area_container {
-  height: calc(100vh - 35px - 42px - 50px);
+  height: calc(100vh - 35px - 42px - 50px - 70px);
   overflow-y: auto;
 }
 .area_container li {
@@ -1848,9 +1875,7 @@ fieldset[disabled] .ivu-btn-primary:hover {
   border-top: 1px #314457 solid;
   cursor: pointer;
 }
-.area_container li:first-child {
-  border-top: none;
-}
+
 .area_container li:hover,
 .area_container li.current {
   background: #071826;
@@ -1997,5 +2022,39 @@ fieldset[disabled] .ivu-btn-primary:hover {
 }
 .countdown_tips .ivu-chart-circle .text {
   color: #2db7f5;
+}
+.operate_bar {
+  height: 70px;
+  line-height: 70px;
+  color: #fff;
+  border-bottom: 1px #102535 solid;
+}
+.operate_bar .ivu-radio-group {
+  display: block;
+}
+.operate_bar .ivu-radio-wrapper {
+  font-size: 16px;
+  width: 50%;
+  float: left;
+  margin: 0;
+  text-align: center;
+  /* padding-left: 30px; */
+}
+.operate_bar .ivu-radio-checked .ivu-radio-inner {
+  border-color: #83c470;
+}
+.ivu-radio-inner {
+  width: 18px;
+  height: 18px;
+}
+.operate_bar .ivu-radio-inner:after {
+  width: 10px;
+  height: 10px;
+  left: 3px;
+  top: 3px;
+  background-color: #83c470;
+}
+.operate_bar .ivu-radio {
+  padding-right: 7px;
 }
 </style>

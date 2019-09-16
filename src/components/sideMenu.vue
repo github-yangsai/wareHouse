@@ -102,7 +102,6 @@ export default {
   },
   methods: {
     delCamera(id) {
-      debugger;
       this.cameraList.splice(this.selectedCamera, 1);
     },
     queryAllData() {

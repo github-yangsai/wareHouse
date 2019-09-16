@@ -1,6 +1,5 @@
 <template>
   <div>
-    <Spin size="large" fix v-if="loading"></Spin>
     <Modal
       v-model="openFlag"
       title="NVR信息"
@@ -15,27 +14,27 @@
           <Row>
             <Col span="12">
               <FormItem label="NVR名称" prop="name">
-                <Input v-model="data.name" placeholder="请输入NVR名称"></Input>
+                <Input v-model="data.name" placeholder="请输入NVR名称" />
               </FormItem>
               <FormItem label="IP地址" prop="ip">
-                <Input v-model="data.ip" placeholder="请输入IP地址"></Input>
+                <Input v-model="data.ip" placeholder="请输入IP地址" />
               </FormItem>
               <FormItem label="端口" prop="port">
-                <Input v-model="data.port" placeholder="请输入端口"></Input>
+                <Input v-model="data.port" placeholder="请输入端口" />
               </FormItem>
               <FormItem label="通道数" prop="channels">
-                <Input v-model="data.channels" placeholder="请输入通道数"></Input>
+                <Input v-model="data.channels" placeholder="请输入通道数" />
               </FormItem>
             </Col>
             <Col span="12">
-              <FormItem label="用户名" prop="name">
-                <Input v-model="data.username" placeholder="请输入用户名"></Input>
+              <FormItem label="用户名" prop="username">
+                <Input v-model="data.username" placeholder="请输入用户名" />
               </FormItem>
               <FormItem label="密码" prop="password">
-                <Input v-model="data.password" placeholder="请输入密码"></Input>
+                <Input v-model="data.password" placeholder="请输入密码" />
               </FormItem>
               <FormItem label="备注" prop="remark">
-                <Input v-model="data.remark" placeholder="请输入备注"></Input>
+                <Input v-model="data.remark" type="textarea" placeholder="请输入备注" />
               </FormItem>
             </Col>
           </Row>
@@ -56,13 +55,17 @@
 export default {
   name: "cameraInfo",
   data() {
+    const validatePort = (rule, value, callback) => {
+      if (!/^\d+$/.test(value)) {
+        callback(new Error("端口号只能是数字"));
+      }
+    };
     return {
-      loading:false,
       ruleValidate: {
         name: [
           {
             required: true,
-            message: "The name cannot be empty",
+            message: "名称不能为空",
             trigger: "blur"
           }
         ],
@@ -83,7 +86,22 @@ export default {
         ],
         password: [
           { required: true, message: "密码不能为空", trigger: "change" }
-        ]
+        ],
+        // port: [
+        //   {
+        //     required: true,
+        //     message: "端口不能为空",
+        //     trigger: "blur",
+        //     // validate: validatePort
+        //   }
+        // ],
+        // channels: [
+        //   {
+        //     required: true,
+        //     message: "通道数不能为空",
+        //     trigger: "blur"
+        //   }
+        // ]
       }
     };
   },
@@ -100,25 +118,23 @@ export default {
     closeDialog() {
       this.$emit("closePopup");
     },
-    handleReset(name) {
-      this.$refs[name].resetFields();
-    },
+    // handleReset(name) {
+    //   this.$refs[name].resetFields();
+    // },
     saveData(name) {
       //修改数据
       this.$refs[name].validate(valid => {
+        debugger
         if (valid) {
           //验证通过
-          this.loading = true;
           if (this.data.id) {
             this.$api.wareHouse.reviewNvr(this.data.id, this.data).then(res => {
-              this.loading = false;
               this.$Message.success("修改成功");
               this.$emit("queryAllData");
               this.closeDialog();
             });
           } else {
             this.$api.wareHouse.addNvr(this.data).then(res => {
-              this.loading = false;
               this.$emit("queryAllData");
               this.$Message.success("新增成功");
               this.closeDialog();
@@ -126,7 +142,7 @@ export default {
           }
         } else {
           //验证不通过
-           this.$Message.error('请完善信息');
+          this.$Message.info("请完善信息");
         }
       });
     }

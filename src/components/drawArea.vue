@@ -5,7 +5,7 @@
       <div class="capture_box">
         <!-- {{points}} -->
         <div class="img_box" id="image_container">
-          <img :src="'http://192.168.16.228:9999/' + this.img_url" />
+          <img :src="'http://ck.ssh.techzk.net/' + this.img_url" />
           <canvas
             width="100%"
             class="canvas"
@@ -24,7 +24,7 @@
 export default {
   name: "drawArea",
   components: {},
-  props: ["data", "notSave", "lineWidth", "lineColor", "index"],
+  props: ["data", "notSave", "lineWidth", "lineColor", "index", "unChangeAll"],
   data() {
     return {
       points: [
@@ -104,7 +104,6 @@ export default {
       this.$canvas = document.getElementById("canvas");
       this.ctx = document.getElementById("canvas").getContext("2d");
       this.image = document.getElementById("image_container");
-      // debugger
       if (this.areaFlag) {
         //新增与编辑区域
         let zones = this.data.zones;
@@ -115,11 +114,8 @@ export default {
         for (let i = 0; i < zones.length; i++) {
           if (zones[i].points) {
             this.points.push(zones[i].points);
-
             //颜色笔触、线宽
             this.palette.push(zones[i].line_color);
-            // let color = this.colorRGB2Hex(zones[i].line_color);
-            // this.palette.push(this.colorRGB2Hex(zones[i].line_color));
             this.lines.push(zones[i].line_width);
             this.visibles.push(zones[i].visible);
           }
@@ -138,7 +134,7 @@ export default {
       this.points = [];
     },
     undo() {
-      if(this.active == -1){
+      if (this.active == -1) {
         return false;
       }
       this.points[this.active].splice(-1, 1);
@@ -365,9 +361,24 @@ export default {
       }
     },
     drawSingle(points, p) {
-      if (!points || !points.length || !this.visibles[p]) {
+      if (!points || !points.length) {
         return false;
       }
+
+      if (this.eyesAll != "0" && !this.visibles[p]) {
+        return false;
+      }
+      //只要不是全部隐藏都让它继续画
+      // let visibleFlag = false;
+      // for(let i = 0; i < this.visibles.length;i++){
+      //   if(this.visibles){
+      //     visibleFlag = true;
+      //   }
+      // }
+      // if(visibleFlag){
+
+      // }
+
       let ctx = this.$canvas.getContext("2d");
       //设置绘制的图像在源图像之上
       ctx.globalCompositeOperation = "destination-over";
@@ -460,12 +471,12 @@ export default {
   watch: {
     index(val) {
       this.active = val;
-      if(val != -1 ){
+      if (val != -1) {
         this.enabled = true;
       }
     },
     lineWidth(val) {
-      if(this.active != -1){
+      if (this.active != -1) {
         this.lines[this.active] = val;
       }
       this.draw();
@@ -490,19 +501,28 @@ export default {
         //     this.visible.push(this.data.zones[i].visible);
         //   }
         // }
-        
+
         //区域变化时数据更新
         let index = this.active;
-        if (index == -1) {
+        if (index == -1 && this.unChangeAll) {
           return false;
         }
+
         this.draw();
         if (index >= points.length) {
           index = points.length - 1;
         }
-        let [...arr] = this.points[index];
-        if (this.data.zones.length) {
-          this.data.zones[index].points = arr;
+        
+        if (index == -1) {
+          let [...arr] = this.points[index+1];
+          if (this.data.zones.length) {
+            this.data.zones[index+1].points = arr;
+          }
+        }else{
+           let [...arr] = this.points[index];
+          if (this.data.zones.length) {
+            this.data.zones[index].points = arr;
+          }
         }
       },
       deep: true
