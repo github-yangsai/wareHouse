@@ -55,9 +55,9 @@ export default {
   name: "nvrInfo",
   data() {
     const validatePort = (rule, value, callback) => {
-      if(!value){
-         callback(new Error("端口号不能为空"));
-         return false;
+      if (!value) {
+        callback(new Error("端口号不能为空"));
+        return false;
       }
       if (!/^\d+$/.test(value)) {
         callback(new Error("端口号只能是数字"));
@@ -71,9 +71,9 @@ export default {
       callback();
     };
     const validateChannels = (rule, value, callback) => {
-      if(!value){
-         callback(new Error("通道数不能为空"));
-         return false;
+      if (!value) {
+        callback(new Error("通道数不能为空"));
+        return false;
       }
       if (!/^\d+$/.test(value)) {
         callback(new Error("通道数只能是数字"));
@@ -82,9 +82,9 @@ export default {
       callback();
     };
     const validateIP = (rule, value, callback) => {
-      if(!value){
-         callback(new Error("ip地址不能为空"));
-         return false;
+      if (!value) {
+        callback(new Error("ip地址不能为空"));
+        return false;
       }
       let reg = /^((\d)|([1-9]\d)|(1\d{2})|((2[0-4]\d)|(25[0-5])))(\.((\d)|([1-9]\d)|(1\d{2})|((2[0-4]\d)|(25[0-5])))){3}$/;
       if (!reg.test(value)) {
@@ -94,31 +94,31 @@ export default {
       callback();
     };
     return {
-      resultData:{},
+      resultData: {},
       ruleValidate: {
-        name:[
+        name: [
           {
             required: true,
             message: "名称不能为空",
             trigger: "blur"
           }
         ],
-        ip:[
+        ip: [
           {
             required: true,
             trigger: "blur",
-            validator:validateIP
+            validator: validateIP
           }
           // { type: "email", message: "Incorrect email format", trigger: "blur" }
         ],
-        username:[
+        username: [
           {
             required: true,
             message: "用户名不能为空",
             trigger: "blur"
           }
         ],
-        password:[
+        password: [
           { required: true, message: "密码不能为空", trigger: "blur" }
         ],
         port: [
@@ -143,9 +143,9 @@ export default {
     openFlag(val) {
       if (val) {
         this.$refs.formValidate.resetFields(); //重置
-       if(this.funtionFlag != 'add'){
-         this.resultData = JSON.parse(JSON.stringify(this.data));
-       }
+        if (this.funtionFlag != "add") {
+          this.resultData = JSON.parse(JSON.stringify(this.data));
+        }
       }
     }
   },
@@ -159,15 +159,17 @@ export default {
     saveData(name) {
       //判断有没有修改数据
       let reviewFlag = false;
-      for(let key in this.data){
-        if(key != "camera"){
-          if(this.data[key] != this.resultData[key]){
-            reviewFlag = true;
-            break;
+      if (this.funtionFlag != "add") {
+        for (let key in this.data) {
+          if (key != "camera") {
+            if (this.data[key] != this.resultData[key]) {
+              reviewFlag = true;
+              break;
+            }
           }
         }
       }
-      if(reviewFlag){
+      if (reviewFlag) {
         this.closeDialog();
         return false;
       }

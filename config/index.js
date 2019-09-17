@@ -3,14 +3,26 @@
 // see http://vuejs-templates.github.io/webpack for documentation.
 
 const path = require('path')
-
+console.log(path);
 module.exports = {
   dev: {
 
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {},
+    proxyTable: {
+      '/warehouse': {
+        target: 'http://192.168.16.228:9999', 
+        changeOrigin: true,
+        // secure: false,  // 如果是https接口，需要配置这个参数
+      },
+      '/upload': {
+        target: 'http://192.168.16.228:9999', 
+        changeOrigin: true,
+        // secure: false,  // 如果是https接口，需要配置这个参数
+      },
+      
+    },
 
     // Various Dev Server settings
     host: '0.0.0.0', // can be overwritten by process.env.HOST
@@ -20,7 +32,7 @@ module.exports = {
     notifyOnErrors: true,
     poll: false, // https://webpack.js.org/configuration/dev-server/#devserver-watchoptions-
 
-    
+
     /**
      * Source Maps
      */

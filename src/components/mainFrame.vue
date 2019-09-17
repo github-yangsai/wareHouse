@@ -1975,8 +1975,10 @@ fieldset[disabled] .ivu-btn-primary:hover {
   background: #142e44;
 }
 .ivu-spin-fix {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.3);
+  z-index: 30;
 }
+
 .countdown_tips {
   position: fixed;
   width: 100%;

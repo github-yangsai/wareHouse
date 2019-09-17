@@ -12,8 +12,21 @@
       <div class="viewconfig_cotainer">
         <Table height="400" :columns="columns" :data="listData"></Table>
         <!-- <div id="config_title"></div>
-        <div id="config_box"></div> -->
+        <div id="config_box"></div>-->
         <div class="btn_box">
+          <!-- <Dropdown trigger="click" selected>
+            <Button type="primary">
+              导出配置表
+              <Icon type="ios-arrow-down"></Icon>
+            </Button>
+            <DropdownMenu slot="list">
+              <DropdownItem name="csv">csv格式</DropdownItem>
+              <DropdownItem name="txt">txt格式</DropdownItem>
+              <DropdownItem name="json">json格式</DropdownItem>
+              <DropdownItem name="xls">xls格式</DropdownItem>
+              <DropdownItem name="xlsx">xlsx格式</DropdownItem>
+            </DropdownMenu>
+          </Dropdown> -->
           <input type="button" value="导出配置表" class="full_btn" @click="downloadTable" />
         </div>
       </div>
@@ -130,7 +143,6 @@ export default {
     openFlag(val) {
       if (val) {
         if (this.data.columns) {
-
           // document.getElementById("config_box").innerHTML = "";
           // document.getElementById("config_title").innerHTML = "";
           // let jsonData = this.data,
@@ -170,27 +182,32 @@ export default {
       }
     }
   },
-  computed:{
-    columns(){
-      if(this.data && this.data.columns){
-        for(let i = 0; i < this.data.columns.length;i++){
+  computed: {
+    columns() {
+      if (this.data && this.data.columns) {
+        for (let i = 0; i < this.data.columns.length; i++) {
           let key = this.data.columns[i].key;
-          if(key == "nvr_name" || key == "nvr_channel" || key == "output_port" || key == "camera_no"){
+          if (
+            key == "nvr_name" ||
+            key == "nvr_channel" ||
+            key == "output_port" ||
+            key == "camera_no"
+          ) {
             this.data.columns[i].width = 100;
-          }else if(key == "camera_name"){
+          } else if (key == "camera_name") {
             this.data.columns[i].width = 130;
           }
         }
-        return this.data.columns
-      }else{
-        return []
+        return this.data.columns;
+      } else {
+        return [];
       }
     },
-    listData(){
-      if(this.data && this.data.data){
-        return this.data.data
-      }else{
-        return []
+    listData() {
+      if (this.data && this.data.data) {
+        return this.data.data;
+      } else {
+        return [];
       }
     }
   }
@@ -216,7 +233,7 @@ export default {
 .config_table td {
   height: 40px;
   /* text-align: center; */
-  padding:0 10px;
+  padding: 0 10px;
   font-size: 14px;
   border: 1px #d2d2d2 solid;
   border-collapse: collapse;
@@ -250,29 +267,35 @@ export default {
   background: #4d6e87;
   border-color: #4d6e87;
 }
-.config_table td:first-child,.config_table th:first-child{
-  width:120px;
+.config_table td:first-child,
+.config_table th:first-child {
+  width: 120px;
 }
-.config_table td:nth-child(2),.config_table th:nth-child(2){
-  width:80px;
+.config_table td:nth-child(2),
+.config_table th:nth-child(2) {
+  width: 80px;
 }
-.config_table td:nth-child(3),.config_table th:nth-child(3){
-  width:80px;
+.config_table td:nth-child(3),
+.config_table th:nth-child(3) {
+  width: 80px;
 }
-.config_table td:nth-child(4),.config_table th:nth-child(4){
-  width:130px;
+.config_table td:nth-child(4),
+.config_table th:nth-child(4) {
+  width: 130px;
 }
-.config_table td:nth-child(5),.config_table th:nth-child(5){
-  width:80px;
+.config_table td:nth-child(5),
+.config_table th:nth-child(5) {
+  width: 80px;
 }
-.config_table th{
+.config_table th {
   border-bottom: none;
 }
-.viewconfig_cotainer .ivu-table td,.viewconfig_cotainer .ivu-table th{
+.viewconfig_cotainer .ivu-table td,
+.viewconfig_cotainer .ivu-table th {
   height: 40px;
-  border-right:1px #e8eaec solid;
+  border-right: 1px #e8eaec solid;
 }
-.viewconfig_cotainer .ivu-table th:last-child{
-  border-right:none;
+.viewconfig_cotainer .ivu-table th:last-child {
+  border-right: none;
 }
 </style>

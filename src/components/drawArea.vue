@@ -4,7 +4,7 @@
       <div class="capture_box">
         <!-- {{points}} -->
         <div class="img_box" id="image_container">
-          <img :src="'http://ck.ssh.techzk.net/' + this.img_url" />
+          <img :src="this.img_url" />
           <canvas
             width="100%"
             class="canvas"
@@ -123,7 +123,7 @@ export default {
         if (flag) {
           this.resize();
         }
-        this.$store.commit("changeLoading", false);
+        // this.$store.commit("changeLoading", false);
       }
     },
     changeActive(index) {
@@ -195,6 +195,7 @@ export default {
       if (this.points.length > 0) {
         this.draw();
       }
+      this.$store.commit("changeLoading", false);
     },
     rightClick(e) {
       if (!e.offsetX) {
