@@ -6,6 +6,7 @@
  import axios from 'axios';
  import router from '../../router';
  import store from '../../store/index';
+ import utils from './utils.js';
  import 'iview/dist/styles/iview.css'
 
 //  debugger
@@ -41,16 +42,18 @@
      switch (status) {
          // 401: 未登录状态，跳转登录页
          case 401:
-            //  toLogin();
+             tip('未登录');
+             toLogin();
              break;
          // 403 token过期
          // 清除token并跳转登录页
          case 403:
              tip('登录过期，请重新登录');
              localStorage.removeItem('token');
-             store.commit('loginSuccess', null);
+             utils.cookies.setItem('token','');
+             
              setTimeout(() => {
-                //  toLogin();
+                 toLogin();
              }, 1000);
              break;
          // 404请求不存在
@@ -58,11 +61,11 @@
              tip('请求的资源不存在');
              break;
          default:
-             console.log(other);
+             tip(other);
          }}
  
  // 创建axios实例
- var instance = axios.create({    timeout: 1000 * 12});
+ var instance = axios.create({timeout: 1000 * 12});
  // 设置post请求头
  instance.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
  /**
@@ -75,9 +78,10 @@
          // 但是即使token存在，也有可能token是过期的，所以在每次的请求头中携带token
          // 后台根据携带的token判断用户的登录情况，并返回给我们对应的状态码
          // 而后我们可以在响应拦截器中，根据状态码进行一些统一的操作。
-         const token = store.state.token;
+         const token = 'Bearer ' + utils.cookies.getItem('token');
          token && (config.headers.Authorization = token);
          return config;
+         
      },
      error => Promise.error(error))
  
@@ -90,8 +94,8 @@
          const { response } = error;
          if (response) {
              // 请求已发出，但是不在2xx的范围
-             tip(response.data);
-             errorHandle(response.status, response.data.message);
+             store.commit('changeLoading', false);
+             errorHandle(response.status, response.data.detail);
              return Promise.reject(response);
          } else {
              // 处理断网的情况

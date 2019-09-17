@@ -51,12 +51,14 @@ const wareHouse = {
     restartServer() {
         return axios.post(`${base.restart}/`);
     },
-    nvrConfig(){
-        return axios.get(`${base.nvr_config}/?format=csv`);
+    nvrConfig(params) {
+        return axios.get(`${base.nvr_config}/`, params, { responseType: 'arraybuffer' });
     },
-    nvrConfigJSON(){
-        return axios.get(`${base.nvr_config}/?format=json`);
+    login(params) {
+        return axios.post(`${base.login}/`, params);
     }
+
+
 
 
 

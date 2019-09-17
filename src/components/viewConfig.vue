@@ -14,7 +14,7 @@
         <!-- <div id="config_title"></div>
         <div id="config_box"></div>-->
         <div class="btn_box">
-          <!-- <Dropdown trigger="click" selected>
+          <!-- <Dropdown trigger="click" @on-click="downloadTable">
             <Button type="primary">
               导出配置表
               <Icon type="ios-arrow-down"></Icon>
@@ -22,12 +22,11 @@
             <DropdownMenu slot="list">
               <DropdownItem name="csv">csv格式</DropdownItem>
               <DropdownItem name="txt">txt格式</DropdownItem>
-              <DropdownItem name="json">json格式</DropdownItem>
               <DropdownItem name="xls">xls格式</DropdownItem>
               <DropdownItem name="xlsx">xlsx格式</DropdownItem>
             </DropdownMenu>
           </Dropdown> -->
-          <input type="button" value="导出配置表" class="full_btn" @click="downloadTable" />
+          <input type="button" value="导出配置表" class="full_btn" @click="downloadTable('csv')" />
         </div>
       </div>
     </Modal>
@@ -112,15 +111,20 @@ export default {
       // box = document.getElementById("config_box");
       // box.appendChild(tbl);
     },
-    downloadTable() {
+    downloadTable(name) {
       //导出配置表
       this.$store.commit("changeLoading", true);
-      this.$api.wareHouse.nvrConfig().then(res => {
+      let params = {
+          params:{
+            format:name
+          }
+        }
+      this.$api.wareHouse.nvrConfig(params).then(res => {
         const content = res.data;
         const blob = new Blob([content]);
         let times = new Date().getTime();
         let currentDate = this.tranferDate(times);
-        const fileName = currentDate + "配置表.csv";
+        const fileName = currentDate + "配置表." + name;
         this.$store.commit("changeLoading", false);
         if ("download" in document.createElement("a")) {
           // 非IE下载

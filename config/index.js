@@ -12,12 +12,12 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/warehouse': {
-        target: 'http://192.168.16.228:9999', 
+        target: 'http://192.168.16.228:8888', 
         changeOrigin: true,
         // secure: false,  // 如果是https接口，需要配置这个参数
       },
       '/upload': {
-        target: 'http://192.168.16.228:9999', 
+        target: 'http://192.168.16.228:8888', 
         changeOrigin: true,
         // secure: false,  // 如果是https接口，需要配置这个参数
       },
