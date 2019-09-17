@@ -10,8 +10,9 @@
       @on-visible-change="closeDialog"
     >
       <div class="viewconfig_cotainer">
-        <div id="config_title"></div>
-        <div id="config_box"></div>
+        <Table height="400" :columns="columns" :data="listData"></Table>
+        <!-- <div id="config_title"></div>
+        <div id="config_box"></div> -->
         <div class="btn_box">
           <input type="button" value="导出配置表" class="full_btn" @click="downloadTable" />
         </div>
@@ -128,43 +129,68 @@ export default {
   watch: {
     openFlag(val) {
       if (val) {
-        if (this.data.index) {
-          document.getElementById("config_box").innerHTML = "";
-          document.getElementById("config_title").innerHTML = "";
-          let jsonData = this.data,
-            i,
-            temp,
-            tbl,
-            tb2,
-            tr,
-            td,
-            th,
-            columnsDiv,
-            box;
-          tbl = document.createElement("table");
-          tbl.className = "config_table";
-          tb2 = document.createElement("table");
-          tb2.className = "config_table";
-          tr = document.createElement("tr");
-          for (let j = 0; j < jsonData.columns.length; j++) {
-            th = document.createElement("th");
-            th.innerHTML = jsonData.columns[j];
-            tr.appendChild(th);
-          }
-          tb2.appendChild(tr);
-          document.getElementById("config_title").appendChild(tb2);
-          for (let i = 0; i < jsonData.data.length; i++) {
-            tr = document.createElement("tr");
-            for (let j = 0; j < jsonData.data[i].length; j++) {
-              td = document.createElement("td");
-              td.innerHTML = jsonData.data[i][j];
-              tr.appendChild(td);
-            }
-            tbl.appendChild(tr);
-          }
-          box = document.getElementById("config_box");
-          box.appendChild(tbl);
+        if (this.data.columns) {
+
+          // document.getElementById("config_box").innerHTML = "";
+          // document.getElementById("config_title").innerHTML = "";
+          // let jsonData = this.data,
+          //   i,
+          //   temp,
+          //   tbl,
+          //   tb2,
+          //   tr,
+          //   td,
+          //   th,
+          //   columnsDiv,
+          //   box;
+          // tbl = document.createElement("table");
+          // tbl.className = "config_table";
+          // tb2 = document.createElement("table");
+          // tb2.className = "config_table";
+          // tr = document.createElement("tr");
+          // for (let j = 0; j < jsonData.columns.length; j++) {
+          //   th = document.createElement("th");
+          //   th.innerHTML = jsonData.columns[j];
+          //   tr.appendChild(th);
+          // }
+          // tb2.appendChild(tr);
+          // document.getElementById("config_title").appendChild(tb2);
+          // for (let i = 0; i < jsonData.data.length; i++) {
+          //   tr = document.createElement("tr");
+          //   for (let j = 0; j < jsonData.data[i].length; j++) {
+          //     td = document.createElement("td");
+          //     td.innerHTML = jsonData.data[i][j];
+          //     tr.appendChild(td);
+          //   }
+          //   tbl.appendChild(tr);
+          // }
+          // box = document.getElementById("config_box");
+          // box.appendChild(tbl);
         }
+      }
+    }
+  },
+  computed:{
+    columns(){
+      if(this.data && this.data.columns){
+        for(let i = 0; i < this.data.columns.length;i++){
+          let key = this.data.columns[i].key;
+          if(key == "nvr_name" || key == "nvr_channel" || key == "output_port" || key == "camera_no"){
+            this.data.columns[i].width = 100;
+          }else if(key == "camera_name"){
+            this.data.columns[i].width = 130;
+          }
+        }
+        return this.data.columns
+      }else{
+        return []
+      }
+    },
+    listData(){
+      if(this.data && this.data.data){
+        return this.data.data
+      }else{
+        return []
       }
     }
   }
@@ -242,5 +268,11 @@ export default {
 .config_table th{
   border-bottom: none;
 }
-
+.viewconfig_cotainer .ivu-table td,.viewconfig_cotainer .ivu-table th{
+  height: 40px;
+  border-right:1px #e8eaec solid;
+}
+.viewconfig_cotainer .ivu-table th:last-child{
+  border-right:none;
+}
 </style>
