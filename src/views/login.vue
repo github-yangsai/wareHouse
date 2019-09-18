@@ -2,7 +2,7 @@
   <div class="login_container">
       <div class="login_all">
     <div id="login" class="login_box">
-      <h3>智能仓库管理后台</h3>
+      <h3>智慧仓库管理后台</h3>
       <div class="login_content">
         <div class="field_box">
           <Input v-model="loginData.username" placeholder="请输入用户名" clearable size="large">
@@ -101,7 +101,7 @@ export default {
     background-size:100%;
 }
 .login_container::after{
-    opacity:0.4;
+    opacity:0.3;
     content:"";
     display:block;
     width:100%;

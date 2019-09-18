@@ -18,16 +18,21 @@
     <Spin size="large" fix v-if="loading"></Spin>
     <Layout class="con_wrap">
       <Header>
-        <div class="file_bar">
-          <Dropdown trigger="click" @on-click="setOption">
-            <a href="javascript:void(0)" class="set_btn">
-              <Icon type="md-settings" />设置
-            </a>
-            <DropdownMenu slot="list">
-              <DropdownItem name="restartServer">重启服务器</DropdownItem>
-              <DropdownItem name="viewTable">查看配置表</DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+        <div class="file_bar clearfix">
+          <div class="set_box" style="float:left;">
+            <Dropdown trigger="click" @on-click="setOption">
+              <a href="javascript:void(0)" class="set_btn">
+                <Icon type="md-settings" />设置
+              </a>
+              <DropdownMenu slot="list">
+                <DropdownItem name="restartServer">重启服务器</DropdownItem>
+                <DropdownItem name="viewTable">查看配置表</DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+          <a class="logout_btn" href="javascript:void(0)" @click="logout">
+            <Icon type="md-power" />注销登录
+          </a>
         </div>
 
         <div class="toolbar clearfix">
@@ -201,6 +206,7 @@
 import sideMenu from "@/components/sideMenu";
 import drawArea from "@/components/drawArea";
 import viewConfig from "@/components/viewConfig";
+import Utils from '../common/utils/utils';
 export default {
   name: "mainFrame",
   components: {
@@ -210,7 +216,7 @@ export default {
   },
   data() {
     return {
-      configCSV:null,
+      configCSV: null,
       viewConfigFlag: false,
       unChangeAll: true,
       eyesAll: "1",
@@ -329,6 +335,20 @@ export default {
     };
   },
   methods: {
+    logout(){
+      //注销登录
+      this.$Modal.confirm({
+        title: "提示",
+        content: "确认注销登录吗？",
+        onOk: () => {
+          Utils.cookies.setItem("token","");
+          localStorage.removeItem('token');
+          this.$router.push({name:"Login"});
+        },
+        onCancel: () => {}
+      });
+      
+    },
     changeShowCameraFlag(val) {
       this.showCameraFlag = val;
     },
@@ -1640,10 +1660,10 @@ export default {
       } else if (name == "viewTable") {
         //查看配置表
         let params = {
-          params:{
-            format:'json'
+          params: {
+            format: "json"
           }
-        }
+        };
         this.$api.wareHouse.nvrConfig(params).then(res => {
           const content = res.data;
           this.configCSV = res.data;
@@ -2052,5 +2072,17 @@ fieldset[disabled] .ivu-btn-primary:hover {
   color: #333;
   font-size: 14px !important;
   padding: 10px 18px;
+}
+.logout_btn{
+  float:right;
+  color:#6fa6d0;
+  position: relative;
+  padding-left:25px;
+}
+.logout_btn i{
+  font-size:20px;
+  position: absolute;
+  left:0;
+  top:7px;
 }
 </style>
